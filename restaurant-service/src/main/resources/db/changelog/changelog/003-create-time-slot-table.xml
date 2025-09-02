@@ -6,7 +6,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
 
     <changeSet id="003-create-time-slot-table" author="restaurant-system">
-        <comment>Create time_slot table</comment>
+        <comment>Create time_slot table for managing restaurant reservations</comment>
 
         <createTable tableName="time_slot">
             <column name="id" type="BIGINT" autoIncrement="true">
@@ -30,16 +30,19 @@
             <column name="status" type="VARCHAR(20)" defaultValue="AVAILABLE">
                 <constraints nullable="false"/>
             </column>
-            <column name="customer_name" type="VARCHAR(255)">
-                <constraints nullable="true"/>
-            </column>
-            <column name="customer_phone" type="VARCHAR(20)">
+            <column name="customer_name" type="VARCHAR(100)">
                 <constraints nullable="true"/>
             </column>
             <column name="customer_email" type="VARCHAR(100)">
                 <constraints nullable="true"/>
             </column>
-            <column name="special_requests" type="VARCHAR(1000)">
+            <column name="customer_phone" type="VARCHAR(20)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="special_requests" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="reservation_notes" type="VARCHAR(500)">
                 <constraints nullable="true"/>
             </column>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
@@ -48,29 +51,38 @@
             <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
+            <column name="confirmed_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cancelled_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
             <column name="version" type="BIGINT" defaultValue="0">
                 <constraints nullable="false"/>
             </column>
         </createTable>
 
+        <!-- Foreign key constraint -->
         <addForeignKeyConstraint
                 baseTableName="time_slot"
                 baseColumnNames="table_id"
-                constraintName="fk_time_slot_restaurant_table"
+                constraintName="fk_time_slot_table"
                 referencedTableName="restaurant_table"
                 referencedColumnNames="id"
                 onDelete="CASCADE"/>
 
-        <createIndex tableName="time_slot" indexName="idx_time_slot_table_id">
+        <!-- Indexes for performance -->
+        <createIndex tableName="time_slot" indexName="idx_time_slot_table_date">
             <column name="table_id"/>
-        </createIndex>
-
-        <createIndex tableName="time_slot" indexName="idx_time_slot_date">
             <column name="date"/>
         </createIndex>
 
         <createIndex tableName="time_slot" indexName="idx_time_slot_status">
             <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="time_slot" indexName="idx_time_slot_customer_email">
+            <column name="customer_email"/>
         </createIndex>
 
         <createIndex tableName="time_slot" indexName="idx_time_slot_date_time">
@@ -79,17 +91,95 @@
             <column name="end_time"/>
         </createIndex>
 
-        <createIndex tableName="time_slot" indexName="idx_time_slot_customer_email">
-            <column name="customer_email"/>
-        </createIndex>
+        <!-- Check constraint for valid status values -->
+        <sql>
+            ALTER TABLE time_slot ADD CONSTRAINT chk_time_slot_status
+            CHECK (status IN ('AVAILABLE', 'RESERVED', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW'));
+        </sql>
 
-        <addUniqueConstraint
-                tableName="time_slot"
-                columnNames="table_id, date, start_time, end_time"
-                constraintName="uk_time_slot_unique"/>
+        <!-- Check constraint for valid times -->
+        <sql>
+            ALTER TABLE time_slot ADD CONSTRAINT chk_time_slot_times
+            CHECK (start_time &lt; end_time);
+        </sql>
+
+        <!-- Check constraint for valid party size -->
+        <sql>
+            ALTER TABLE time_slot ADD CONSTRAINT chk_time_slot_party_size
+            CHECK (party_size &gt; 0 AND party_size &lt;= 20);
+        </sql>
 
         <rollback>
             <dropTable tableName="time_slot"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Add sample time slots for development -->
+    <changeSet id="003-1-add-sample-time-slots" author="restaurant-system" context="dev">
+        <comment>Add sample time slots for development testing</comment>
+
+        <!-- Time slots for Le Petit Bistro (restaurant_id = 1) -->
+        <!-- Table 1 - Window table for 4 -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="1"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="19:00"/>
+            <column name="end_time" value="21:00"/>
+            <column name="party_size" value="4"/>
+            <column name="status" value="AVAILABLE"/>
+        </insert>
+
+        <insert tableName="time_slot">
+            <column name="table_id" value="1"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="21:30"/>
+            <column name="end_time" value="23:00"/>
+            <column name="party_size" value="4"/>
+            <column name="status" value="AVAILABLE"/>
+        </insert>
+
+        <!-- Table 2 - Terrace table for 6 -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="2"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="18:00"/>
+            <column name="end_time" value="20:00"/>
+            <column name="party_size" value="6"/>
+            <column name="status" value="RESERVED"/>
+            <column name="customer_name" value="Marie Dupont"/>
+            <column name="customer_email" value="marie.dupont@example.fr"/>
+            <column name="customer_phone" value="+33 6 12 34 56 78"/>
+            <column name="special_requests" value="Table en terrasse si possible"/>
+        </insert>
+
+        <!-- Tomorrow's slots -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="3"/>
+            <column name="date" valueComputed="DATEADD('DAY', 2, CURRENT_DATE)"/>
+            <column name="start_time" value="19:30"/>
+            <column name="end_time" value="21:30"/>
+            <column name="party_size" value="2"/>
+            <column name="status" value="CONFIRMED"/>
+            <column name="customer_name" value="Jean Martin"/>
+            <column name="customer_email" value="jean.martin@example.fr"/>
+            <column name="customer_phone" value="+33 6 87 65 43 21"/>
+            <column name="confirmed_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Time slots for La Brasserie Moderne (restaurant_id = 2) -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="4"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="20:00"/>
+            <column name="end_time" value="22:00"/>
+            <column name="party_size" value="8"/>
+            <column name="status" value="AVAILABLE"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="time_slot">
+                <where>table_id IN (1, 2, 3, 4)</where>
+            </delete>
         </rollback>
     </changeSet>
 

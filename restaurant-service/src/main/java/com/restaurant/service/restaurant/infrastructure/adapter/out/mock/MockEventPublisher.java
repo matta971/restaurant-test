@@ -31,16 +31,16 @@ public class MockEventPublisher implements EventPublisherPort {
     private void logEventDetails(DomainEvent event) {
         if (event instanceof EventPublisherPort.RestaurantCreatedEvent e) {
             logger.info("Restaurant created: {} at {} with capacity {}",
-                    e.name(), e.address(), e.capacity());
+                    e.restaurantName(), e.address(), e.capacity());
         } else if (event instanceof EventPublisherPort.RestaurantStatusChangedEvent e) {
             logger.info("Restaurant {} status changed to: {}",
-                    e.restaurantId(), e.active() ? "ACTIVE" : "INACTIVE");
+                    e.restaurantId(), e.isActive() ? "ACTIVE" : "INACTIVE");
         } else if (event instanceof EventPublisherPort.TableAddedEvent e) {
             logger.info("Table {} added to restaurant {} with {} seats at {}",
                     e.tableNumber(), e.restaurantId(), e.seats(), e.location());
         } else if (event instanceof EventPublisherPort.TableAvailabilityChangedEvent e) {
             logger.info("Table {} availability changed to: {}",
-                    e.tableNumber(), e.available() ? "AVAILABLE" : "UNAVAILABLE");
+                    e.tableNumber(), e.isAvailable() ? "AVAILABLE" : "UNAVAILABLE");
         } else if (event instanceof EventPublisherPort.ReservationCreatedEvent e) {
             logger.info("Reservation created for {} people on {} from {} to {} at table {}",
                     e.partySize(), e.date(), e.startTime(), e.endTime(), e.tableId());

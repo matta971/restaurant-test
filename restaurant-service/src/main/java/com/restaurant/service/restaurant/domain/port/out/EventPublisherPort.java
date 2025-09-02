@@ -1,16 +1,19 @@
 package com.restaurant.service.restaurant.domain.port.out;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 /**
  * Port for publishing domain events to external systems
- * This allows the restaurant service to communicate with other bounded contexts
- * without direct coupling
+ * This allows the domain to notify other bounded contexts about important events
  */
 public interface EventPublisherPort {
 
     /**
      * Publishes a domain event
-     * 
-     * @param event the event to publish
+     *
+     * @param event the domain event to publish
      */
     void publishEvent(DomainEvent event);
 
@@ -19,166 +22,222 @@ public interface EventPublisherPort {
      */
     interface DomainEvent {
         String getEventType();
-        Long getAggregateId();
-        java.time.Instant getOccurredAt();
+        Instant getOccurredAt();
+        String getAggregateId();
     }
 
     /**
-     * Event fired when a restaurant is created
+     * Event published when a restaurant is created
      */
     record RestaurantCreatedEvent(
-        Long restaurantId,
-        String name,
-        String address,
-        Integer capacity,
-        java.time.Instant occurredAt
+            Long restaurantId,
+            String restaurantName,
+            String address,
+            String email,
+            Integer capacity,
+            Instant occurredAt
     ) implements DomainEvent {
         @Override
         public String getEventType() {
-            return "RestaurantCreated";
+            return "RESTAURANT_CREATED";
         }
 
         @Override
-        public Long getAggregateId() {
-            return restaurantId;
-        }
-
-        @Override
-        public java.time.Instant getOccurredAt() {
+        public Instant getOccurredAt() {
             return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
         }
     }
 
     /**
-     * Event fired when a restaurant is activated/deactivated
+     * Event published when a restaurant is updated
+     */
+    record RestaurantUpdatedEvent(
+            Long restaurantId,
+            String restaurantName,
+            String previousName,
+            Instant occurredAt
+    ) implements DomainEvent {
+        @Override
+        public String getEventType() {
+            return "RESTAURANT_UPDATED";
+        }
+
+        @Override
+        public Instant getOccurredAt() {
+            return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
+        }
+    }
+
+    /**
+     * Event published when a restaurant is activated or deactivated
      */
     record RestaurantStatusChangedEvent(
-        Long restaurantId,
-        boolean active,
-        java.time.Instant occurredAt
+            Long restaurantId,
+            String restaurantName,
+            boolean isActive,
+            Instant occurredAt
     ) implements DomainEvent {
         @Override
         public String getEventType() {
-            return "RestaurantStatusChanged";
+            return "RESTAURANT_STATUS_CHANGED";
         }
 
         @Override
-        public Long getAggregateId() {
-            return restaurantId;
-        }
-
-        @Override
-        public java.time.Instant getOccurredAt() {
+        public Instant getOccurredAt() {
             return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
         }
     }
 
     /**
-     * Event fired when a table is added to a restaurant
+     * Event published when a table is added to a restaurant
      */
     record TableAddedEvent(
-        Long restaurantId,
-        Long tableId,
-        String tableNumber,
-        Integer seats,
-        String location,
-        java.time.Instant occurredAt
+            Long restaurantId,
+            Long tableId,
+            String tableNumber,
+            Integer seats,
+            String location,
+            Instant occurredAt
     ) implements DomainEvent {
         @Override
         public String getEventType() {
-            return "TableAdded";
+            return "TABLE_ADDED";
         }
 
         @Override
-        public Long getAggregateId() {
-            return restaurantId;
-        }
-
-        @Override
-        public java.time.Instant getOccurredAt() {
+        public Instant getOccurredAt() {
             return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
         }
     }
 
     /**
-     * Event fired when a table's availability changes
+     * Event published when table availability changes
      */
     record TableAvailabilityChangedEvent(
-        Long restaurantId,
-        Long tableId,
-        String tableNumber,
-        boolean available,
-        java.time.Instant occurredAt
+            Long restaurantId,
+            Long tableId,
+            String tableNumber,
+            boolean isAvailable,
+            Instant occurredAt
     ) implements DomainEvent {
         @Override
         public String getEventType() {
-            return "TableAvailabilityChanged";
+            return "TABLE_AVAILABILITY_CHANGED";
         }
 
         @Override
-        public Long getAggregateId() {
-            return restaurantId;
-        }
-
-        @Override
-        public java.time.Instant getOccurredAt() {
+        public Instant getOccurredAt() {
             return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
         }
     }
 
     /**
-     * Event fired when a reservation is created
+     * Event published when a reservation is created
      */
     record ReservationCreatedEvent(
-        Long restaurantId,
-        Long tableId,
-        Long timeSlotId,
-        java.time.LocalDate date,
-        java.time.LocalTime startTime,
-        java.time.LocalTime endTime,
-        Integer partySize,
-        java.time.Instant occurredAt
+            Long restaurantId,
+            Long tableId,
+            Long timeSlotId,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            Integer partySize,
+            String customerEmail,
+            Instant occurredAt
     ) implements DomainEvent {
         @Override
         public String getEventType() {
-            return "ReservationCreated";
+            return "RESERVATION_CREATED";
         }
 
         @Override
-        public Long getAggregateId() {
-            return restaurantId;
-        }
-
-        @Override
-        public java.time.Instant getOccurredAt() {
+        public Instant getOccurredAt() {
             return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
         }
     }
 
     /**
-     * Event fired when a reservation status changes
+     * Event published when a reservation status changes
      */
     record ReservationStatusChangedEvent(
-        Long restaurantId,
-        Long tableId,
-        Long timeSlotId,
-        String previousStatus,
-        String newStatus,
-        java.time.Instant occurredAt
+            Long restaurantId,
+            Long tableId,
+            Long timeSlotId,
+            String previousStatus,
+            String newStatus,
+            Instant occurredAt
     ) implements DomainEvent {
         @Override
         public String getEventType() {
-            return "ReservationStatusChanged";
+            return "RESERVATION_STATUS_CHANGED";
         }
 
         @Override
-        public Long getAggregateId() {
-            return restaurantId;
-        }
-
-        @Override
-        public java.time.Instant getOccurredAt() {
+        public Instant getOccurredAt() {
             return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
+        }
+    }
+
+    /**
+     * Event published when capacity utilization reaches a threshold
+     */
+    record CapacityThresholdReachedEvent(
+            Long restaurantId,
+            String restaurantName,
+            LocalDate date,
+            LocalTime time,
+            double utilizationRate,
+            double threshold,
+            Instant occurredAt
+    ) implements DomainEvent {
+        @Override
+        public String getEventType() {
+            return "CAPACITY_THRESHOLD_REACHED";
+        }
+
+        @Override
+        public Instant getOccurredAt() {
+            return occurredAt;
+        }
+
+        @Override
+        public String getAggregateId() {
+            return restaurantId.toString();
         }
     }
 }

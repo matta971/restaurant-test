@@ -1,0 +1,274 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: restaurant-system/api-gateway:latest
+    container_name: restaurant-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_GATEWAY_ROUTES[0]_ID=restaurant-service
+      - SPRING_CLOUD_GATEWAY_ROUTES[0]_URI=lb://restaurant-service
+      - SPRING_CLOUD_GATEWAY_ROUTES[0]_PREDICATES[0]=Path=/api/restaurants/**
+      - SPRING_CLOUD_GATEWAY_ROUTES[1]_ID=reservation-service
+      - SPRING_CLOUD_GATEWAY_ROUTES[1]_URI=lb://reservation-service
+      - SPRING_CLOUD_GATEWAY_ROUTES[1]_PREDICATES[0]=Path=/api/reservations/**
+      - JWT_SECRET=mySecretKey123456789012345678901234567890
+      - LOGGING_LEVEL_ROOT=INFO
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+    depends_on:
+      - restaurant-service-1
+      - restaurant-service-2
+      - reservation-service-1
+      - reservation-service-2
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Restaurant Service - Instance 1
+  restaurant-service-1:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    image: restaurant-system/restaurant-service:latest
+    container_name: restaurant-service-1
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=restaurant-service
+      - EUREKA_INSTANCE_INSTANCE_ID=restaurant-service-1
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:restaurant_db_1;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      - SPRING_DATASOURCE_USERNAME=restaurant
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db/changelog/db.changelog-master.xml
+      - SPRING_LIQUIBASE_CONTEXTS=dev
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_RESTAURANT=DEBUG
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Restaurant Service - Instance 2 (for load balancing)
+  restaurant-service-2:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    image: restaurant-system/restaurant-service:latest
+    container_name: restaurant-service-2
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=restaurant-service
+      - EUREKA_INSTANCE_INSTANCE_ID=restaurant-service-2
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:restaurant_db_2;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      - SPRING_DATASOURCE_USERNAME=restaurant
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db/changelog/db.changelog-master.xml
+      - SPRING_LIQUIBASE_CONTEXTS=dev
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_RESTAURANT=DEBUG
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Reservation Service - Instance 1
+  reservation-service-1:
+    build:
+      context: ./reservation-service
+      dockerfile: Dockerfile
+    image: restaurant-system/reservation-service:latest
+    container_name: reservation-service-1
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=reservation-service
+      - EUREKA_INSTANCE_INSTANCE_ID=reservation-service-1
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:reservation_db_1;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      - SPRING_DATASOURCE_USERNAME=reservation
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db/changelog/db.changelog-master.xml
+      - SPRING_LIQUIBASE_CONTEXTS=dev
+      - RESTAURANT_SERVICE_URL=http://api-gateway:8080/api/restaurants
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_RESTAURANT=DEBUG
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+    depends_on:
+      - restaurant-service-1
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Reservation Service - Instance 2
+  reservation-service-2:
+    build:
+      context: ./reservation-service
+      dockerfile: Dockerfile
+    image: restaurant-system/reservation-service:latest
+    container_name: reservation-service-2
+    ports:
+      - "8084:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=reservation-service
+      - EUREKA_INSTANCE_INSTANCE_ID=reservation-service-2
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:reservation_db_2;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      - SPRING_DATASOURCE_USERNAME=reservation
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db/changelog/db.changelog-master.xml
+      - SPRING_LIQUIBASE_CONTEXTS=dev
+      - RESTAURANT_SERVICE_URL=http://api-gateway:8080/api/restaurants
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_RESTAURANT=DEBUG
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+    depends_on:
+      - restaurant-service-2
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Load Balancer (nginx)
+  load-balancer:
+    image: nginx:alpine
+    container_name: restaurant-load-balancer
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-gateway
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: restaurant-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: restaurant-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+
+  # Log aggregation - ELK Stack would go here in production
+  # For now, we use centralized logging via Docker logging driver
+
+networks:
+  restaurant-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+---
+# Development override (docker-compose.override.yml)
+version: '3.8'
+
+services:
+  api-gateway:
+    environment:
+      - LOGGING_LEVEL_ROOT=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY=DEBUG
+    volumes:
+      - ./api-gateway/src/main/resources/application-docker.yml:/app/config/application-docker.yml:ro
+
+  restaurant-service-1:
+    environment:
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+    volumes:
+      - ./restaurant-service/target/classes:/app/classes:ro
+
+  restaurant-service-2:
+    environment:
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+    volumes:
+      - ./restaurant-service/target/classes:/app/classes:ro
+
+  # H2 Console for development (accessible at http://localhost:8085)
+  h2-console:
+    image: oscarfonts/h2:latest
+    container_name: restaurant-h2-console
+    ports:
+      - "8085:1521"
+    environment:
+      - H2_OPTIONS=-web -webAllowOthers -tcp -tcpAllowOthers -browser
+    networks:
+      - restaurant-network
