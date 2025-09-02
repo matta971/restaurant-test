@@ -21,7 +21,7 @@ services:
       - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db/changelog/db.changelog-master.xml
       - SPRING_H2_CONSOLE_ENABLED=true
       - LOGGING_LEVEL_ROOT=INFO
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,liquibase
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus,liquibase
     networks:
       - restaurant-network
     restart: unless-stopped
@@ -52,7 +52,7 @@ services:
       - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db/changelog/db.changelog-master.xml
       - SPRING_H2_CONSOLE_ENABLED=true
       - LOGGING_LEVEL_ROOT=INFO
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,liquibase
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus,liquibase
     networks:
       - restaurant-network
     restart: unless-stopped
@@ -84,7 +84,7 @@ services:
       - SPRING_H2_CONSOLE_ENABLED=true
       - RESTAURANT_SERVICE_URL=http://restaurant-service-1:8081
       - LOGGING_LEVEL_ROOT=INFO
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,liquibase
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus,liquibase
     networks:
       - restaurant-network
     restart: unless-stopped
@@ -118,7 +118,7 @@ services:
       - SPRING_H2_CONSOLE_ENABLED=true
       - RESTAURANT_SERVICE_URL=http://restaurant-service-2:8081
       - LOGGING_LEVEL_ROOT=INFO
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,liquibase
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus,liquibase
     networks:
       - restaurant-network
     restart: unless-stopped
@@ -146,10 +146,10 @@ services:
       - SPRING_APPLICATION_NAME=api-gateway
       - SERVICES_RESTAURANT_URL=http://restaurant-service-1:8081
       - SERVICES_RESERVATION_URL=http://reservation-service-1:8082
-      - JWT_SECRET=mySecretKey2024RestaurantReservationSystemDocker
+      - JWT_SECRET=mySecretKey2025RestaurantReservationSystemSecureJWTKeyForHS512Algo
       - JWT_EXPIRATION=86400
       - LOGGING_LEVEL_ROOT=INFO
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,gateway
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus,gateway
     networks:
       - restaurant-network
     restart: unless-stopped

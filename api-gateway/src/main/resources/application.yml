@@ -47,7 +47,7 @@ spring:
 
 # JWT Configuration
 jwt:
-  secret: mySecretKey2024RestaurantReservationSystem
+  secret: mySecretKey2025RestaurantReservationSystemSecureJWTKeyForHS512Algo
   expiration: 86400 # 24 hours in seconds
   header: Authorization
   prefix: "Bearer "

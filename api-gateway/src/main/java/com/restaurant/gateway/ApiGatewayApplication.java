@@ -1,5 +1,6 @@
 package com.restaurant.gateway;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -15,6 +16,11 @@ import org.springframework.context.annotation.Bean;
     "com.restaurant.common"
 })
 public class ApiGatewayApplication {
+    @Value("${services.restaurant.url:http://restaurant-service-1:8081}")
+    private String restaurantServiceUrl;
+
+    @Value("${services.reservation.url:http://reservation-service-1:8082}")
+    private String reservationServiceUrl;
 
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayApplication.class, args);
@@ -29,51 +35,33 @@ public class ApiGatewayApplication {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                // Restaurant Service Routes
+                // Restaurant Service Routes - URL configurée par variable
                 .route("restaurant-service", r -> r
                         .path("/api/restaurants/**")
                         .filters(f -> f
                                 .stripPrefix(0)
-                                .circuitBreaker(config -> config
-                                        .setName("restaurant-service-cb")
-                                        .setFallbackUri("forward:/fallback/restaurant"))
+                                .addRequestHeader("X-Forwarded-Host", "localhost:8080")
+                                .addRequestHeader("X-Forwarded-Proto", "http")
+                                .addRequestHeader("X-Forwarded-Prefix", "")
                                 .retry(config -> config
                                         .setRetries(3)
                                         .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
                                                 org.springframework.http.HttpStatus.GATEWAY_TIMEOUT)))
-                        .uri("lb://restaurant-service"))
+                        .uri(restaurantServiceUrl))
 
-                // Reservation Service Routes
+                // Reservation Service Routes - URL configurée par variable
                 .route("reservation-service", r -> r
-                        .path("/api/reservations/**")
+                        .path("/api/reservations/**", "/api/customers/**")
                         .filters(f -> f
                                 .stripPrefix(0)
-                                .circuitBreaker(config -> config
-                                        .setName("reservation-service-cb")
-                                        .setFallbackUri("forward:/fallback/reservation"))
+                                .addRequestHeader("X-Forwarded-Host", "localhost:8080")
+                                .addRequestHeader("X-Forwarded-Proto", "http")
+                                .addRequestHeader("X-Forwarded-Prefix", "")
                                 .retry(config -> config
                                         .setRetries(3)
                                         .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
                                                 org.springframework.http.HttpStatus.GATEWAY_TIMEOUT)))
-                        .uri("lb://reservation-service"))
-
-                // Authentication Routes (public)
-                .route("auth", r -> r
-                        .path("/auth/**")
-                        .filters(f -> f.stripPrefix(0))
-                        .uri("forward:///"))
-
-                // Health Check Routes (public)
-                .route("health", r -> r
-                        .path("/actuator/health")
-                        .filters(f -> f.stripPrefix(0))
-                        .uri("forward:///"))
-
-                // Swagger UI Routes (public for development)
-                .route("swagger-ui", r -> r
-                        .path("/swagger-ui/**", "/api-docs/**")
-                        .filters(f -> f.stripPrefix(0))
-                        .uri("forward:///"))
+                        .uri(reservationServiceUrl))
 
                 .build();
     }
