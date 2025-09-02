@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="004-add-sample-data" author="restaurant-system" context="dev">
+        <comment>Add sample data for development - in correct dependency order</comment>
+
+        <!-- ÉTAPE 1: Insérer les restaurants D'ABORD -->
+        <insert tableName="restaurant">
+            <column name="name" value="Le Petit Bistro"/>
+            <column name="address" value="123 Rue de la Paix, 75001 Paris"/>
+            <column name="phone" value="+33 1 42 86 87 88"/>
+            <column name="email" value="contact@petitbistro.fr"/>
+            <column name="capacity" value="50"/>
+            <column name="opening_time" value="11:00"/>
+            <column name="closing_time" value="23:00"/>
+            <column name="active" value="true"/>
+        </insert>
+
+        <insert tableName="restaurant">
+            <column name="name" value="La Brasserie Moderne"/>
+            <column name="address" value="456 Avenue des Champs-Élysées, 75008 Paris"/>
+            <column name="phone" value="+33 1 45 62 53 84"/>
+            <column name="email" value="reservation@brasserie-moderne.fr"/>
+            <column name="capacity" value="80"/>
+            <column name="opening_time" value="12:00"/>
+            <column name="closing_time" value="23:00"/>
+            <column name="active" value="true"/>
+        </insert>
+
+        <!-- ÉTAPE 2: Insérer les tables APRÈS les restaurants -->
+        <insert tableName="restaurant_table">
+            <column name="restaurant_id" value="1"/>
+            <column name="seats" value="4"/>
+            <column name="location" value="WINDOW"/>
+            <column name="available" value="true"/>
+            <column name="table_number" value="1"/>
+        </insert>
+
+        <insert tableName="restaurant_table">
+            <column name="restaurant_id" value="1"/>
+            <column name="seats" value="6"/>
+            <column name="location" value="TERRACE"/>
+            <column name="available" value="true"/>
+            <column name="table_number" value="2"/>
+        </insert>
+
+        <insert tableName="restaurant_table">
+            <column name="restaurant_id" value="1"/>
+            <column name="seats" value="2"/>
+            <column name="location" value="INDOOR"/>
+            <column name="available" value="true"/>
+            <column name="table_number" value="3"/>
+        </insert>
+
+        <insert tableName="restaurant_table">
+            <column name="restaurant_id" value="2"/>
+            <column name="seats" value="8"/>
+            <column name="location" value="PRIVATE_ROOM"/>
+            <column name="available" value="true"/>
+            <column name="table_number" value="1"/>
+        </insert>
+
+        <insert tableName="restaurant_table">
+            <column name="restaurant_id" value="2"/>
+            <column name="seats" value="4"/>
+            <column name="location" value="WINDOW"/>
+            <column name="available" value="true"/>
+            <column name="table_number" value="2"/>
+        </insert>
+
+        <!-- ÉTAPE 3: Insérer les time_slots APRÈS les tables -->
+        <!-- Time slots pour Le Petit Bistro - Table 1 (4 places, fenêtre) -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="1"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="19:00"/>
+            <column name="end_time" value="21:00"/>
+            <column name="party_size" value="4"/>
+            <column name="status" value="AVAILABLE"/>
+        </insert>
+
+        <insert tableName="time_slot">
+            <column name="table_id" value="1"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="21:30"/>
+            <column name="end_time" value="23:00"/>
+            <column name="party_size" value="4"/>
+            <column name="status" value="AVAILABLE"/>
+        </insert>
+
+        <!-- Time slots pour Le Petit Bistro - Table 2 (6 places, terrasse) -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="2"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="18:00"/>
+            <column name="end_time" value="20:00"/>
+            <column name="party_size" value="6"/>
+            <column name="status" value="RESERVED"/>
+            <column name="customer_name" value="Marie Dupont"/>
+            <column name="customer_email" value="marie.dupont@example.fr"/>
+            <column name="customer_phone" value="+33 6 12 34 56 78"/>
+            <column name="special_requests" value="Table en terrasse si possible"/>
+        </insert>
+
+        <!-- Time slot pour Le Petit Bistro - Table 3 (2 places, intérieur) -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="3"/>
+            <column name="date" valueComputed="DATEADD('DAY', 2, CURRENT_DATE)"/>
+            <column name="start_time" value="19:30"/>
+            <column name="end_time" value="21:30"/>
+            <column name="party_size" value="2"/>
+            <column name="status" value="CONFIRMED"/>
+            <column name="customer_name" value="Jean Martin"/>
+            <column name="customer_email" value="jean.martin@example.fr"/>
+            <column name="customer_phone" value="+33 6 87 65 43 21"/>
+            <column name="confirmed_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Time slot pour La Brasserie Moderne - Table 4 (8 places, salon privé) -->
+        <insert tableName="time_slot">
+            <column name="table_id" value="4"/>
+            <column name="date" valueComputed="DATEADD('DAY', 1, CURRENT_DATE)"/>
+            <column name="start_time" value="20:00"/>
+            <column name="end_time" value="22:00"/>
+            <column name="party_size" value="8"/>
+            <column name="status" value="AVAILABLE"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="time_slot"/>
+            <delete tableName="restaurant_table"/>
+            <delete tableName="restaurant"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
