@@ -20,6 +20,7 @@ class TimeSlotStatusTest {
         assertThat(statuses).hasSize(4);
         assertThat(statuses).contains(
             TimeSlotStatus.AVAILABLE,
+            TimeSlotStatus.RESERVED,
             TimeSlotStatus.CONFIRMED,
             TimeSlotStatus.COMPLETED,
             TimeSlotStatus.CANCELLED
