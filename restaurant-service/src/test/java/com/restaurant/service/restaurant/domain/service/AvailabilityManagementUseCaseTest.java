@@ -233,7 +233,7 @@ class AvailabilityManagementUseCaseTest {
             Integer partySize = 4;
 
             CreateReservationCommand command = new CreateReservationCommand(
-                    tableId, date, startTime, endTime, partySize
+                    tableId, date, startTime, endTime, partySize, "email@customer.com"
             );
 
             RestaurantTable table = createTable(tableId, 4, TableLocation.WINDOW);
@@ -276,7 +276,8 @@ class AvailabilityManagementUseCaseTest {
                     LocalDate.now().plusDays(1),
                     LocalTime.of(19, 0),
                     LocalTime.of(21, 0),
-                    4
+                    4,
+                    "email@customer.com"
             );
 
             when(tableRepository.findById(tableId)).thenReturn(Optional.empty());
@@ -301,7 +302,8 @@ class AvailabilityManagementUseCaseTest {
                     LocalDate.now().plusDays(1),
                     LocalTime.of(19, 0),
                     LocalTime.of(21, 0),
-                    6 // Exceeds table capacity
+                    6, // Exceeds table capacity
+                    "email@customer.com"
             );
 
             RestaurantTable table = createTable(tableId, 4, TableLocation.WINDOW);

@@ -133,7 +133,8 @@ class UseCaseIntegrationTest {
                 reservationDate,
                 LocalTime.of(19, 0),
                 LocalTime.of(21, 0),
-                4
+                4,
+                "email@customer.com"
         );
 
         TimeSlot createdTimeSlot = new TimeSlot(
@@ -197,7 +198,8 @@ class UseCaseIntegrationTest {
                 LocalDate.now().plusDays(1),
                 LocalTime.of(19, 0),
                 LocalTime.of(21, 0),
-                4
+                4,
+                "email@customer.com"
         );
 
         when(tableRepository.findById(1L)).thenReturn(Optional.of(table));
