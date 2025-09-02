@@ -127,7 +127,7 @@ public class AvailabilityManagementUseCaseImpl implements AvailabilityManagement
                     savedTimeSlot.getStartTime(),
                     savedTimeSlot.getEndTime(),
                     savedTimeSlot.getReservedSeats(),
-                    timeSlot.getTable().getTableNumber(),
+                    "T-"+timeSlot.getTable().getTableNumber(),
                     Map.of("reservationId", savedTimeSlot.getId())
             );
             notificationPort.sendNotification(notification);

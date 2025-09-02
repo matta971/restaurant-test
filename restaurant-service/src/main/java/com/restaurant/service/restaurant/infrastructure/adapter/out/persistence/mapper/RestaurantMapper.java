@@ -63,7 +63,7 @@ public class RestaurantMapper {
         RestaurantEntity entity = new RestaurantEntity(
             domain.getName(),
             domain.getAddress(),
-            domain.getPhone(),
+            domain.getPhoneNumber(),
             domain.getEmail(),
             domain.getCapacity()
         );
@@ -96,7 +96,7 @@ public class RestaurantMapper {
 
         entity.setName(domain.getName());
         entity.setAddress(domain.getAddress());
-        entity.setPhone(domain.getPhone());
+        entity.setPhone(domain.getPhoneNumber());
         entity.setEmail(domain.getEmail());
         entity.setCapacity(domain.getCapacity());
         entity.setActive(domain.isActive());

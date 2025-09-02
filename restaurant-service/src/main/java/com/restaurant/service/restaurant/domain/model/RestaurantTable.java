@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @Entity
 @jakarta.persistence.Table(name = "restaurant_tables")
 @Getter
+@Setter
 @NoArgsConstructor
 public class RestaurantTable {
 
@@ -32,7 +34,7 @@ public class RestaurantTable {
 
     @Setter
     @Column(name = "table_number", nullable = false, unique = true)
-    private String tableNumber;
+    private Integer tableNumber;
 
     @Column(name = "seats", nullable = false)
     @Min(value = MIN_SEATS, message = "Table seats must be positive")
@@ -54,6 +56,16 @@ public class RestaurantTable {
 
     @OneToMany(mappedBy = "table", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TimeSlot> timeSlots = new ArrayList<>();
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 
     /**
      * Creates a new RestaurantTable with the specified properties
@@ -178,8 +190,8 @@ public class RestaurantTable {
         }
     }
 
-    private String generateTableNumber() {
-        return "T-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    private Integer generateTableNumber() {
+        return (int) (Math.random() * 9000) + 1000;
     }
 
     // Setters with validation (Lombok won't generate these because of validation logic)

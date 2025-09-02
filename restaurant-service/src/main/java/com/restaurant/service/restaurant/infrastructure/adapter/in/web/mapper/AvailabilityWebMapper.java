@@ -25,7 +25,7 @@ public class AvailabilityWebMapper {
     public TableResponse toTableResponse(RestaurantTable table) {
         return new TableResponse(
             table.getId(),
-            table.getTableNumber(),
+            "T-"+table.getTableNumber(),
             table.getSeats(),
             table.getLocation(),
             table.isAvailable(),

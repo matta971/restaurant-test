@@ -8,6 +8,7 @@ import lombok.Getter;
  */
 public enum TimeSlotStatus {
     AVAILABLE("Réservation disponible", true, true, false, false),
+    RESERVED("Réservation confirmée", true, false, true, false),
     CONFIRMED("Réservation confirmée", true, false, true, false),
     COMPLETED("Service terminé", false, false, false, true),
     CANCELLED("Réservation annulée", false, false, false, true);

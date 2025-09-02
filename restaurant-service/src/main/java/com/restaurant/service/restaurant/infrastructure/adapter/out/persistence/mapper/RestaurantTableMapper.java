@@ -90,7 +90,10 @@ public class RestaurantTableMapper {
         entity.setLocation(mapLocationToEntity(domain.getLocation()));
         entity.setAvailable(domain.isAvailable());
         entity.setTableNumber(domain.getTableNumber());
-        // Note: Don't update ID, createdAt, updatedAt, version - managed by JPA
+
+        if (domain.getVersion() != null) {
+            entity.setVersion(domain.getVersion());
+        }
     }
 
     /**
@@ -116,6 +119,27 @@ public class RestaurantTableMapper {
 
         return table;
     }
+
+    /**
+     * Convert RestaurantTableEntity to RestaurantTable domain model with minimal data
+     */
+    public RestaurantTable toDomainMinimal(RestaurantTableEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        RestaurantTable table = new RestaurantTable(
+                entity.getSeats(),
+                mapLocationToDomain(entity.getLocation())
+        );
+
+        table.setId(entity.getId());
+        table.setTableNumber(entity.getTableNumber()); // Both are Integer now
+        table.setAvailable(entity.getAvailable());
+
+        return table;
+    }
+
 
     /**
      * Map TableLocationEntity to TableLocation domain enum

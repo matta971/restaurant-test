@@ -39,7 +39,7 @@ public class TableManagementUseCaseImpl implements TableManagementUseCase {
         var event = new EventPublisherPort.TableAddedEvent(
                 command.restaurantId(),
                 savedTable.getId(),
-                savedTable.getTableNumber(),
+                "T-"+savedTable.getTableNumber(),
                 savedTable.getSeats(),
                 savedTable.getLocation().name(),
                 Instant.now()
@@ -103,7 +103,7 @@ public class TableManagementUseCaseImpl implements TableManagementUseCase {
         var event = new EventPublisherPort.TableAvailabilityChangedEvent(
                 table.getRestaurant() != null ? table.getRestaurant().getId() : null,
                 savedTable.getId(),
-                savedTable.getTableNumber(),
+                "T-"+savedTable.getTableNumber(),
                 true,
                 Instant.now()
         );
@@ -124,7 +124,7 @@ public class TableManagementUseCaseImpl implements TableManagementUseCase {
         var event = new EventPublisherPort.TableAvailabilityChangedEvent(
                 table.getRestaurant() != null ? table.getRestaurant().getId() : null,
                 savedTable.getId(),
-                savedTable.getTableNumber(),
+                "T-"+savedTable.getTableNumber(),
                 false,
                 Instant.now()
         );

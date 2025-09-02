@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -42,6 +43,32 @@ public class TimeSlot {
     @Column(name = "reserved_seats", nullable = false)
     @Positive(message = "Reserved seats must be positive")
     private Integer reservedSeats;
+
+    @Column(name = "party_size", nullable = false)
+    @Positive(message = "Party size must be positive")
+    private Integer partySize;
+
+    @Column(name = "customer_name")
+    private String customerName;
+
+    @Column(name = "customer_phone")
+    private String customerPhone;
+
+    @Column(name = "customer_email")
+    private String customerEmail;
+
+    @Column(name = "special_requests", length = 500)
+    private String specialRequests;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)

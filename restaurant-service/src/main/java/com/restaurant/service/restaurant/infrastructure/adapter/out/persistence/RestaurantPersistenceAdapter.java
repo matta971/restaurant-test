@@ -44,7 +44,7 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
     private final RestaurantTableMapper tableMapper;
     private final TimeSlotMapper timeSlotMapper;
 
-    // ============ Restaurant Operations ============
+    // ============ Restaurant Operations (Required by RestaurantRepositoryPort) ============
 
     @Override
     public Restaurant save(Restaurant restaurant) {
@@ -77,22 +77,6 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Restaurant> findByIdWithTables(Long id) {
-        log.debug("Finding restaurant with tables by id: {}", id);
-        return restaurantRepository.findByIdWithTables(id)
-                .map(restaurantMapper::toDomain);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<Restaurant> findByEmail(String email) {
-        log.debug("Finding restaurant by email: {}", email);
-        return restaurantRepository.findByEmail(email)
-                .map(restaurantMapper::toDomain);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<Restaurant> findAll() {
         log.debug("Finding all restaurants");
         return restaurantRepository.findAll().stream()
@@ -102,44 +86,20 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Restaurant> findAll(Pageable pageable) {
-        log.debug("Finding all restaurants with pagination: {}", pageable);
-        return restaurantRepository.findAll(pageable)
-                .map(restaurantMapper::toDomain);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Restaurant> findActiveRestaurants() {
-        log.debug("Finding active restaurants");
-        return restaurantRepository.findByActiveTrue().stream()
+    public List<Restaurant> findAllActive() {
+        log.debug("Finding all active restaurants");
+        return restaurantRepository.findAllActive().stream()
                 .map(restaurantMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Restaurant> findActiveRestaurants(Pageable pageable) {
-        log.debug("Finding active restaurants with pagination: {}", pageable);
-        return restaurantRepository.findByActiveTrue(pageable)
-                .map(restaurantMapper::toDomain);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Restaurant> searchByName(String name) {
-        log.debug("Searching restaurants by name: {}", name);
-        return restaurantRepository.findByNameContainingIgnoreCase(name).stream()
+    public List<Restaurant> findByNameContaining(String name) {
+        log.debug("Finding restaurants by name containing: {}", name);
+        return restaurantRepository.findByNameContaining(name).stream()
                 .map(restaurantMapper::toDomain)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<Restaurant> searchByName(String name, Pageable pageable) {
-        log.debug("Searching restaurants by name with pagination: {} - {}", name, pageable);
-        return restaurantRepository.findByNameContainingIgnoreCase(name, pageable)
-                .map(restaurantMapper::toDomain);
     }
 
     @Override
@@ -153,16 +113,9 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsByEmail(String email) {
-        log.debug("Checking if restaurant exists by email: {}", email);
-        return restaurantRepository.findByEmail(email).isPresent();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean existsByEmailAndIdNot(String email, Long id) {
-        log.debug("Checking if restaurant exists by email {} excluding id: {}", email, id);
-        return restaurantRepository.existsByEmailAndIdNot(email, id);
+    public boolean existsById(Long id) {
+        log.debug("Checking if restaurant exists by id: {}", id);
+        return restaurantRepository.existsById(id);
     }
 
     @Override
@@ -179,13 +132,70 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    public long countActive() {
+        return restaurantRepository.countActive();
+    }
+
+    // ============ Extended Operations (Used by Use Cases) ============
+
+    @Transactional(readOnly = true)
+    public Optional<Restaurant> findByIdWithTables(Long id) {
+        log.debug("Finding restaurant with tables by id: {}", id);
+        return restaurantRepository.findByIdWithTables(id)
+                .map(restaurantMapper::toDomain);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Restaurant> findByEmail(String email) {
+        log.debug("Finding restaurant by email: {}", email);
+        return restaurantRepository.findByEmail(email)
+                .map(restaurantMapper::toDomain);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Restaurant> findAll(Pageable pageable) {
+        log.debug("Finding all restaurants with pagination: {}", pageable);
+        Page<RestaurantEntity> entityPage = restaurantRepository.findAll(pageable);
+        return entityPage.map(restaurantMapper::toDomain);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Restaurant> findActiveRestaurants() {
+        log.debug("Finding active restaurants");
+        return restaurantRepository.findAllActive().stream()
+                .map(restaurantMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Restaurant> searchByName(String name) {
+        log.debug("Searching restaurants by name: {}", name);
+        return restaurantRepository.findByNameContaining(name).stream()
+                .map(restaurantMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Restaurant> findByNameContainingIgnoreCase(String name) {
+        log.debug("Finding restaurants by name containing (ignore case): {}", name);
+        return restaurantRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(restaurantMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByEmailAndIdNot(String email, Long id) {
+        log.debug("Checking if restaurant exists by email {} excluding id {}", email, id);
+        return restaurantRepository.existsByEmailAndIdNot(email, id);
+    }
+
+    @Transactional(readOnly = true)
     public long countActiveRestaurants() {
         return restaurantRepository.countByActiveTrue();
     }
 
-    // ============ Table Operations ============
+    // ============ Table Operations (Extended functionality) ============
 
-    @Override
     public RestaurantTable saveTable(RestaurantTable table) {
         log.debug("Saving table: {} seats at {}", table.getSeats(), table.getLocation());
 
@@ -206,7 +216,6 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
         }
     }
 
-    @Override
     @Transactional(readOnly = true)
     public Optional<RestaurantTable> findTableById(Long id) {
         log.debug("Finding table by id: {}", id);
@@ -214,7 +223,6 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
                 .map(tableMapper::toDomain);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public Optional<RestaurantTable> findTableByIdWithTimeSlots(Long id) {
         log.debug("Finding table with time slots by id: {}", id);
@@ -222,7 +230,6 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
                 .map(tableMapper::toDomain);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public List<RestaurantTable> findTablesByRestaurantId(Long restaurantId) {
         log.debug("Finding tables by restaurant id: {}", restaurantId);
@@ -231,40 +238,23 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
                 .collect(Collectors.toList());
     }
 
-    @Override
     @Transactional(readOnly = true)
     public List<RestaurantTable> findAvailableTablesByRestaurantId(Long restaurantId) {
         log.debug("Finding available tables by restaurant id: {}", restaurantId);
-        return tableRepository.findByRestaurantIdAndAvailableTrue(restaurantId).stream()
+        return tableRepository.findByRestaurantIdAndAvailable(restaurantId, true).stream()
                 .map(tableMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<RestaurantTable> findAvailableTablesForDateAndTime(Long restaurantId, LocalDate date,
-                                                                   LocalTime startTime, LocalTime endTime,
-                                                                   Integer partySize) {
-        log.debug("Finding available tables for restaurant {} on {} from {} to {} for {} people",
-                restaurantId, date, startTime, endTime, partySize);
-        return tableRepository.findAvailableTablesForDateAndTime(restaurantId, date, startTime, endTime, partySize)
-                .stream()
-                .map(tableMapper::toDomain)
-                .collect(Collectors.toList());
+    public void deleteTable(Long tableId) {
+        log.debug("Deleting table by id: {}", tableId);
+        tableRepository.deleteById(tableId);
     }
 
-    @Override
-    public void deleteTableById(Long id) {
-        log.debug("Deleting table by id: {}", id);
-        tableRepository.deleteById(id);
-    }
+    // ============ TimeSlot Operations (Extended functionality) ============
 
-    // ============ Time Slot Operations ============
-
-    @Override
     public TimeSlot saveTimeSlot(TimeSlot timeSlot) {
-        log.debug("Saving time slot: {} on {} from {} to {}",
-                timeSlot.getPartySize(), timeSlot.getDate(), timeSlot.getStartTime(), timeSlot.getEndTime());
+        log.debug("Saving time slot for date: {}", timeSlot.getDate());
 
         if (timeSlot.getId() == null) {
             // Create new time slot
@@ -279,11 +269,10 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
                         TimeSlotEntity updatedEntity = timeSlotRepository.save(existingEntity);
                         return timeSlotMapper.toDomain(updatedEntity);
                     })
-                    .orElseThrow(() -> new IllegalArgumentException("Time slot not found with id: " + timeSlot.getId()));
+                    .orElseThrow(() -> new IllegalArgumentException("TimeSlot not found with id: " + timeSlot.getId()));
         }
     }
 
-    @Override
     @Transactional(readOnly = true)
     public Optional<TimeSlot> findTimeSlotById(Long id) {
         log.debug("Finding time slot by id: {}", id);
@@ -291,50 +280,39 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
                 .map(timeSlotMapper::toDomain);
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public Optional<TimeSlot> findTimeSlotByIdWithDetails(Long id) {
-        log.debug("Finding time slot with details by id: {}", id);
-        return timeSlotRepository.findByIdWithDetails(id)
-                .map(timeSlotMapper::toDomain);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<TimeSlot> findTimeSlotsByTableAndDate(Long tableId, LocalDate date) {
-        log.debug("Finding time slots by table {} and date {}", tableId, date);
-        return timeSlotRepository.findByTableIdAndDate(tableId, date).stream()
+    public List<TimeSlot> findTimeSlotsByTableId(Long tableId) {
+        log.debug("Finding time slots by table id: {}", tableId);
+        return timeSlotRepository.findByTableId(tableId).stream()
                 .map(timeSlotMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public List<TimeSlot> findUpcomingReservations(Long restaurantId, LocalDate fromDate) {
-        log.debug("Finding upcoming reservations for restaurant {} from {}", restaurantId, fromDate);
-        return timeSlotRepository.findUpcomingReservations(restaurantId, fromDate).stream()
+    public List<TimeSlot> findTimeSlotsByDateRange(LocalDate startDate, LocalDate endDate) {
+        log.debug("Finding time slots between {} and {}", startDate, endDate);
+        return timeSlotRepository.findByDateBetween(startDate, endDate).stream()
                 .map(timeSlotMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public List<TimeSlot> findReservationsByCustomerEmail(String email) {
-        log.debug("Finding reservations by customer email: {}", email);
-        return timeSlotRepository.findByCustomerEmailOrderByDateDescStartTimeDesc(email).stream()
+    public List<TimeSlot> findAvailableTimeSlots(Long restaurantId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        log.debug("Finding available time slots for restaurant {} on {} between {} and {}",
+                restaurantId, date, startTime, endTime);
+        return timeSlotRepository.findAvailableTimeSlots(restaurantId, date, startTime, endTime).stream()
                 .map(timeSlotMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public void deleteTimeSlotById(Long id) {
-        log.debug("Deleting time slot by id: {}", id);
-        timeSlotRepository.deleteById(id);
+    public void deleteTimeSlot(Long timeSlotId) {
+        log.debug("Deleting time slot by id: {}", timeSlotId);
+        timeSlotRepository.deleteById(timeSlotId);
     }
 
-    @Override
-    public void deleteOldTimeSlots(LocalDate cutoffDate) {
-        log.debug("Deleting time slots before: {}", cutoffDate);
-        timeSlotRepository.deleteByDateBefore(cutoffDate);
+    @Transactional(readOnly = true)
+    public long countTimeSlotsByStatus(String status) {
+        log.debug("Counting time slots by status: {}", status);
+        return timeSlotRepository.countByStatus(TimeSlotEntity.TimeSlotStatusEntity.valueOf(status));
     }
 }
