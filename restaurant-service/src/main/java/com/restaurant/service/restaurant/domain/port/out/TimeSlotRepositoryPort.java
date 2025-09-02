@@ -39,6 +39,16 @@ public interface TimeSlotRepositoryPort {
      */
     List<TimeSlot> findByTableId(Long tableId);
 
+    List<TimeSlot> findByTableIdAndDate(Long tableId, LocalDate date);
+
+    List<TimeSlot> findByTableIdAndStatus(Long tableId, TimeSlotStatus status);
+
+    List<TimeSlot> findOverlappingTimeSlots(Long tableId, LocalDate date,
+                                            LocalTime startTime, LocalTime endTime);
+
+    List<TimeSlot> findActiveTimeSlotsByTableIdAndDateRange(Long tableId, LocalDate startDate,
+                                                            LocalDate endDate);
+
     /**
      * Finds time slots for a restaurant on a specific date
      *
@@ -116,6 +126,8 @@ public interface TimeSlotRepositoryPort {
      */
     long countByRestaurantIdAndStatus(Long restaurantId, TimeSlotStatus status);
 
+    long countByTableId(Long tableId);
+
     /**
      * Counts reservations for a restaurant on a specific date
      *
@@ -163,6 +175,8 @@ public interface TimeSlotRepositoryPort {
      * @return list of upcoming time slots
      */
     List<TimeSlot> findUpcomingByRestaurantId(Long restaurantId, LocalDate fromDate);
+
+    UtilizationStats getUtilizationStats(Long restaurantId, LocalDate date);
 
     /**
      * Data structure for utilization statistics

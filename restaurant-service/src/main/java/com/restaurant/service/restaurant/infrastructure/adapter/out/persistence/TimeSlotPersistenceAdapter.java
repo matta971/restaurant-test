@@ -50,14 +50,14 @@ public class TimeSlotPersistenceAdapter implements TimeSlotRepositoryPort {
     }
 
     @Override
-    public List<TimeSlot> findOverlappingTimeSlots(Long tableId, LocalDate date, 
-                                                  LocalTime startTime, LocalTime endTime) {
+    public List<TimeSlot> findOverlappingTimeSlots(Long tableId, LocalDate date,
+                                                   LocalTime startTime, LocalTime endTime) {
         return timeSlotJpaRepository.findOverlappingTimeSlots(tableId, date, startTime, endTime);
     }
 
     @Override
-    public List<TimeSlot> findActiveTimeSlotsByTableIdAndDateRange(Long tableId, LocalDate startDate, 
-                                                                  LocalDate endDate) {
+    public List<TimeSlot> findActiveTimeSlotsByTableIdAndDateRange(Long tableId, LocalDate startDate,
+                                                                   LocalDate endDate) {
         return timeSlotJpaRepository.findActiveTimeSlotsByTableIdAndDateRange(tableId, startDate, endDate);
     }
 
@@ -69,6 +69,31 @@ public class TimeSlotPersistenceAdapter implements TimeSlotRepositoryPort {
     @Override
     public List<TimeSlot> findByRestaurantIdAndStatus(Long restaurantId, TimeSlotStatus status) {
         return timeSlotJpaRepository.findByRestaurantIdAndStatus(restaurantId, status);
+    }
+
+    @Override
+    public List<TimeSlot> findByRestaurantIdAndDateBetween(Long restaurantId, LocalDate startDate, LocalDate endDate) {
+        return List.of();
+    }
+
+    @Override
+    public List<TimeSlot> findAvailableByRestaurantIdAndDate(Long restaurantId, LocalDate date) {
+        return List.of();
+    }
+
+    @Override
+    public List<TimeSlot> findConflictingTimeSlots(Long tableId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        return List.of();
+    }
+
+    @Override
+    public List<TimeSlot> findUpcomingReservations(Long restaurantId, int limit) {
+        return List.of();
+    }
+
+    @Override
+    public List<TimeSlot> findReservationsInTimeRange(Long restaurantId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        return List.of();
     }
 
     @Override
@@ -98,12 +123,38 @@ public class TimeSlotPersistenceAdapter implements TimeSlotRepositoryPort {
     }
 
     @Override
+    public long countByRestaurantIdAndDate(Long restaurantId, LocalDate date) {
+        return timeSlotJpaRepository.countByRestaurantIdAndDate(restaurantId, date);
+    }
+
+    @Override
     public long countByRestaurantIdAndStatus(Long restaurantId, TimeSlotStatus status) {
         return timeSlotJpaRepository.countByRestaurantIdAndStatus(restaurantId, status);
     }
 
     @Override
-    public List<TimeSlot> findExpiredTimeSlots(LocalDate beforeDate) {
-        return timeSlotJpaRepository.findExpiredTimeSlots(beforeDate);
+    public List<TimeSlot> findExpiredTimeSlots(LocalDate cutoffDate) {
+        return timeSlotJpaRepository.findExpiredTimeSlots(cutoffDate);
+    }
+
+    @Override
+    public UtilizationStats getUtilizationStats(Long restaurantId, LocalDate date) {
+        // Implémentation simple calculant les stats à partir des données
+        List<TimeSlot> allSlots = findByRestaurantIdAndDate(restaurantId, date);
+
+        long totalSlots = allSlots.size();
+        long reservedSlots = allSlots.stream().mapToLong(slot ->
+                slot.getStatus() == TimeSlotStatus.RESERVED ? 1 : 0).sum();
+        long availableSlots = allSlots.stream().mapToLong(slot ->
+                slot.getStatus() == TimeSlotStatus.AVAILABLE ? 1 : 0).sum();
+        long confirmedSlots = allSlots.stream().mapToLong(slot ->
+                slot.getStatus() == TimeSlotStatus.CONFIRMED ? 1 : 0).sum();
+        long cancelledSlots = allSlots.stream().mapToLong(slot ->
+                slot.getStatus() == TimeSlotStatus.CANCELLED ? 1 : 0).sum();
+
+        double utilizationRate = totalSlots > 0 ? (double) (reservedSlots + confirmedSlots) / totalSlots : 0.0;
+
+        return new UtilizationStats(totalSlots, reservedSlots, availableSlots,
+                confirmedSlots, cancelledSlots, utilizationRate);
     }
 }

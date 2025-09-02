@@ -153,4 +153,14 @@ public interface TimeSlotJpaAdapter extends JpaRepository<TimeSlot, Long> {
      */
     @Query("SELECT ts FROM TimeSlot ts WHERE ts.date < :beforeDate")
     List<TimeSlot> findExpiredTimeSlots(@Param("beforeDate") LocalDate beforeDate);
+
+    /**
+     * Count time slots for a restaurant on a specific date
+     */
+    @Query("SELECT COUNT(ts) FROM TimeSlot ts " +
+            "JOIN ts.table t " +
+            "JOIN t.restaurant r " +
+            "WHERE r.id = :restaurantId AND ts.date = :date")
+    long countByRestaurantIdAndDate(@Param("restaurantId") Long restaurantId,
+                                    @Param("date") LocalDate date);
 }

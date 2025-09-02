@@ -122,8 +122,7 @@ public interface AvailabilityManagementUseCase {
         LocalDate date,
         LocalTime startTime,
         LocalTime endTime,
-        Integer partySize,
-        String customerEmail
+        Integer partySize
     ) {}
 
     /**
