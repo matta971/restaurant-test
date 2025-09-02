@@ -4,6 +4,8 @@ import com.restaurant.service.restaurant.domain.model.Restaurant;
 import com.restaurant.service.restaurant.domain.port.in.RestaurantManagementUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.service.restaurant.infrastructure.adapter.in.web.controller.RestaurantController;
+import com.restaurant.service.restaurant.infrastructure.adapter.in.web.exception.GlobalExceptionHandler;
+import com.restaurant.service.restaurant.infrastructure.adapter.in.web.mapper.RestaurantWebMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -11,9 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalTime;
@@ -29,7 +33,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for RestaurantController
  * Testing REST API endpoints with mocked use cases
  */
-@WebMvcTest(RestaurantController.class)
+@WebMvcTest(RestaurantController.class
+
+)
 @DisplayName("Restaurant Controller Unit Tests")
 class RestaurantControllerTest {
 
@@ -41,6 +47,9 @@ class RestaurantControllerTest {
 
     @MockBean
     private RestaurantManagementUseCase restaurantManagementUseCase;
+
+    @MockBean
+    private RestaurantWebMapper mapper;
 
     private Restaurant testRestaurant;
     private CreateRestaurantRequest createRequest;
@@ -74,7 +83,7 @@ class RestaurantControllerTest {
                 "updated@petitbistro.fr",
                 75,
                 LocalTime.of(10, 0),
-                LocalTime.of(24, 0)
+                LocalTime.of(23, 59)
         );
     }
 

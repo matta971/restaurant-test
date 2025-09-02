@@ -15,7 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "com.restaurant.common"
 })
 @EntityScan("com.restaurant.service.restaurant.domain.model")
-@EnableJpaRepositories("com.restaurant.service.restaurant.infrastructure.adapter.out.persistence")
+//@EnableJpaRepositories("com.restaurant.service.restaurant.infrastructure.adapter.out.persistence")
 @LoadBalancerClient(name = "restaurant-service")
 public class RestaurantServiceApplication {
 

@@ -7,6 +7,7 @@ import com.restaurant.service.restaurant.domain.model.TimeSlotStatus;
 import com.restaurant.service.restaurant.domain.port.in.AvailabilityManagementUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.service.restaurant.infrastructure.adapter.in.web.controller.AvailabilityController;
+import com.restaurant.service.restaurant.infrastructure.adapter.in.web.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Testing REST API endpoints with mocked use cases
  */
 @WebMvcTest(AvailabilityController.class)
+@Import({GlobalExceptionHandler.class})
 @DisplayName("Availability Controller Unit Tests")
 class AvailabilityControllerTest {
 

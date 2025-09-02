@@ -5,6 +5,7 @@ import com.restaurant.service.restaurant.domain.model.TableLocation;
 import com.restaurant.service.restaurant.domain.port.in.TableManagementUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.service.restaurant.infrastructure.adapter.in.web.controller.TableController;
+import com.restaurant.service.restaurant.infrastructure.adapter.in.web.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,8 +29,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for TableController
  * Testing REST API endpoints with mocked use cases
  */
-@WebMvcTest(TableController.class)
+@WebMvcTest(controllers = TableController.class,
+        excludeAutoConfiguration = {
+                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration.class,
+                // ⬇️ Spring Cloud LoadBalancer
+                org.springframework.cloud.loadbalancer.config.LoadBalancerAutoConfiguration.class,
+                org.springframework.cloud.loadbalancer.config.BlockingLoadBalancerClientAutoConfiguration.class
+        })
 @DisplayName("Table Controller Unit Tests")
+@Import({GlobalExceptionHandler.class})
 class TableControllerTest {
 
     @Autowired
