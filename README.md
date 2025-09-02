@@ -390,6 +390,18 @@ curl http://localhost/nginx_status
 - **Meilleure intégration** : Support natif Spring Boot 3.x
 - **Performance** : I/O non-bloquante pour un débit élevé
 
+### Pourquoi Liquibase plutôt que Flyway ?
+- **Support XML/YAML** : Plus flexible que les migrations SQL uniquement
+- **Capacités de rollback** : Meilleur support pour les rollbacks en production
+- **Logique conditionnelle** : Logique de migration spécifique à la base de données
+- **Intégration Spring Boot** : Intégration transparente avec Spring Boot
+
+### Pourquoi Testcontainers plutôt que des Mocks ?
+- **Intégration réelle** : Les tests s'exécutent contre des instances de services réelles
+- **Validation de contrats** : Assure que les services communiquent correctement
+- **Parité d'environnement** : Cohérence développement/test/production
+- **Confiance** : Confiance plus élevée dans la préparation au déploiement
+
 ### Pourquoi l'Architecture Hexagonale ?
 - **Testabilité** : Facile de tester la logique métier en isolation
 - **Flexibilité** : Les décisions technologiques peuvent changer sans affecter les règles métier
