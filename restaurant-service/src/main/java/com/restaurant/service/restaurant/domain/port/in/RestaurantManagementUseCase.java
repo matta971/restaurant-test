@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * Use Case interface for Restaurant management operations
@@ -45,6 +46,8 @@ public interface RestaurantManagementUseCase {
      */
     Page<Restaurant> getAllRestaurants(Pageable pageable);
 
+    List<Restaurant> getAllRestaurants();
+    List<Restaurant> getActiveRestaurants();
     /**
      * Searches restaurants by name with pagination
      * 
@@ -53,7 +56,8 @@ public interface RestaurantManagementUseCase {
      * @return page of matching restaurants
      */
     Page<Restaurant> searchRestaurants(String name, Pageable pageable);
-
+    List<Restaurant> searchRestaurantsByName(String name);
+    List<Restaurant> searchRestaurantsByCity(String city);
     /**
      * Activates a restaurant
      * 
@@ -123,7 +127,9 @@ public interface RestaurantManagementUseCase {
         Integer availableTables,
         Integer totalSeats,
         Integer availableSeats,
-        Boolean active
+        Boolean active,
+        Double occupancyRate,
+        Double averageTableSize
     ) {}
 
     /**
@@ -132,6 +138,12 @@ public interface RestaurantManagementUseCase {
     class RestaurantNotFoundException extends RuntimeException {
         public RestaurantNotFoundException(Long restaurantId) {
             super("Restaurant not found with ID: " + restaurantId);
+        }
+    }
+
+    class RestaurantAlreadyExistsException extends RuntimeException {
+        public RestaurantAlreadyExistsException(String name) {
+            super("Restaurant with name '" + name + "' already exists");
         }
     }
 }

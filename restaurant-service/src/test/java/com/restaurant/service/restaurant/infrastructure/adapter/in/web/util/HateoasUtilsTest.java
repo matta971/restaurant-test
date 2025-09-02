@@ -133,8 +133,8 @@ class HateoasUtilsTest {
                     .add(linkTo(methodOn(RestaurantController.class).getRestaurant(restaurant.getId())).withSelfRel())
                     .add(linkTo(methodOn(RestaurantController.class).updateRestaurant(restaurant.getId(), null)).withRel("update"))
                     .add(linkTo(methodOn(RestaurantController.class).deleteRestaurant(restaurant.getId())).withRel("delete"))
-                    .add(linkTo(methodOn(TableController.class).getRestaurantTables(restaurant.getId(), null, null, null, null)).withRel("tables"))
-                    .add(linkTo(methodOn(AvailabilityController.class).checkAvailability(restaurant.getId(), null, null, null, null)).withRel("availability"))
+                    .add(linkTo(methodOn(TableController.class).getRestaurantTables(restaurant.getId())).withRel("tables"))
+                    .add(linkTo(methodOn(AvailabilityController.class).getAvailability(restaurant.getId(), null, null, null, null)).withRel("availability"))
                     .addIf(restaurant.isActive(), () -> 
                             linkTo(methodOn(RestaurantController.class).deactivateRestaurant(restaurant.getId())).withRel("deactivate"))
                     .addIf(!restaurant.isActive(), () -> 

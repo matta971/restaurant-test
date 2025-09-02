@@ -100,10 +100,10 @@ class AvailabilityControllerTest {
                     .andExpect(jsonPath("$.query.date").value("2024-12-26"))
                     .andExpect(jsonPath("$.query.startTime").value("19:00:00"))
                     .andExpect(jsonPath("$.query.endTime").value("21:00:00"))
-                    .andExpected(jsonPath("$.query.partySize").value(4))
+                    .andExpect(jsonPath("$.query.partySize").value(4))
                     // HATEOAS links
-                    .andExpected(jsonPath("$._links.self.href").exists())
-                    .andExpected(jsonPath("$._links.restaurant.href").exists());
+                    .andExpect(jsonPath("$._links.self.href").exists())
+                    .andExpect(jsonPath("$._links.restaurant.href").exists());
 
             verify(availabilityManagementUseCase).findAvailableTables(any(AvailabilityManagementUseCase.AvailabilityQuery.class));
         }
@@ -124,7 +124,7 @@ class AvailabilityControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.availableTables").isArray())
-                    .andExpected(jsonPath("$.availableTables.length()").value(0));
+                    .andExpect(jsonPath("$.availableTables.length()").value(0));
 
             verify(availabilityManagementUseCase).findAvailableTables(any(AvailabilityManagementUseCase.AvailabilityQuery.class));
         }
@@ -139,7 +139,7 @@ class AvailabilityControllerTest {
                             .param("endTime", "21:00")
                             .param("partySize", "4"))
                     .andDo(print())
-                    .andExpected(status().isBadRequest());
+                    .andExpect(status().isBadRequest());
 
             verifyNoInteractions(availabilityManagementUseCase);
         }
@@ -190,9 +190,9 @@ class AvailabilityControllerTest {
                             .param("partySize", "4"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpected(jsonPath("$.table.id").value(1))
-                    .andExpected(jsonPath("$.table.seats").value(4))
-                    .andExpected(jsonPath("$.table.location").value("WINDOW"));
+                    .andExpect(jsonPath("$.table.id").value(1))
+                    .andExpect(jsonPath("$.table.seats").value(4))
+                    .andExpect(jsonPath("$.table.location").value("WINDOW"));
 
             verify(availabilityManagementUseCase).findBestAvailableTable(any(AvailabilityManagementUseCase.AvailabilityQuery.class));
         }
@@ -235,17 +235,17 @@ class AvailabilityControllerTest {
                             .content(objectMapper.writeValueAsString(createReservationRequest)))
                     .andDo(print())
                     .andExpect(status().isCreated())
-                    .andExpected(jsonPath("$.id").value(1))
-                    .andExpected(jsonPath("$.date").value("2024-12-26"))
-                    .andExpected(jsonPath("$.startTime").value("19:00:00"))
-                    .andExpected(jsonPath("$.endTime").value("21:00:00"))
-                    .andExpected(jsonPath("$.reservedSeats").value(4))
-                    .andExpected(jsonPath("$.status").value("AVAILABLE"))
-                    .andExpected(header().string("Location", "/api/restaurants/1/reservations/1"))
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.date").value("2024-12-26"))
+                    .andExpect(jsonPath("$.startTime").value("19:00:00"))
+                    .andExpect(jsonPath("$.endTime").value("21:00:00"))
+                    .andExpect(jsonPath("$.reservedSeats").value(4))
+                    .andExpect(jsonPath("$.status").value("AVAILABLE"))
+                    .andExpect(header().string("Location", "/api/restaurants/1/reservations/1"))
                     // HATEOAS links
-                    .andExpected(jsonPath("$._links.self.href").exists())
-                    .andExpected(jsonPath("$._links.confirm.href").exists())
-                    .andExpected(jsonPath("$._links.cancel.href").exists());
+                    .andExpect(jsonPath("$._links.self.href").exists())
+                    .andExpect(jsonPath("$._links.confirm.href").exists())
+                    .andExpect(jsonPath("$._links.cancel.href").exists());
 
             verify(availabilityManagementUseCase).createReservation(any(AvailabilityManagementUseCase.CreateReservationCommand.class));
         }
@@ -268,7 +268,7 @@ class AvailabilityControllerTest {
                             .content(objectMapper.writeValueAsString(createReservationRequest)))
                     .andDo(print())
                     .andExpect(status().isBadRequest())
-                    .andExpected(jsonPath("$.violations[?(@.field == 'tableId')]").exists());
+                    .andExpect(jsonPath("$.violations[?(@.field == 'tableId')]").exists());
 
             verifyNoInteractions(availabilityManagementUseCase);
         }
@@ -290,8 +290,8 @@ class AvailabilityControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(createReservationRequest)))
                     .andDo(print())
-                    .andExpected(status().isBadRequest())
-                    .andExpected(jsonPath("$.violations[?(@.field == 'partySize')]").exists());
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.violations[?(@.field == 'partySize')]").exists());
 
             verifyNoInteractions(availabilityManagementUseCase);
         }
@@ -331,9 +331,9 @@ class AvailabilityControllerTest {
             // When & Then
             mockMvc.perform(patch("/api/restaurants/1/reservations/1/confirm"))
                     .andDo(print())
-                    .andExpected(status().isOk())
-                    .andExpected(jsonPath("$.id").value(1))
-                    .andExpected(jsonPath("$.status").value("CONFIRMED"));
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.status").value("CONFIRMED"));
 
             verify(availabilityManagementUseCase).confirmReservation(1L);
         }
@@ -351,8 +351,8 @@ class AvailabilityControllerTest {
             mockMvc.perform(patch("/api/restaurants/1/reservations/1/cancel"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpected(jsonPath("$.id").value(1))
-                    .andExpected(jsonPath("$.status").value("CANCELLED"));
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.status").value("CANCELLED"));
 
             verify(availabilityManagementUseCase).cancelReservation(1L);
         }
@@ -370,8 +370,8 @@ class AvailabilityControllerTest {
             mockMvc.perform(patch("/api/restaurants/1/reservations/1/complete"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpected(jsonPath("$.id").value(1))
-                    .andExpected(jsonPath("$.status").value("COMPLETED"));
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.status").value("COMPLETED"));
 
             verify(availabilityManagementUseCase).completeReservation(1L);
         }
@@ -386,8 +386,8 @@ class AvailabilityControllerTest {
             // When & Then
             mockMvc.perform(patch("/api/restaurants/1/reservations/999/confirm"))
                     .andDo(print())
-                    .andExpected(status().isNotFound())
-                    .andExpected(jsonPath("$.message").value("Time slot not found with ID: 999"));
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").value("Time slot not found with ID: 999"));
 
             verify(availabilityManagementUseCase).confirmReservation(999L);
         }
@@ -403,8 +403,8 @@ class AvailabilityControllerTest {
             // When & Then
             mockMvc.perform(patch("/api/restaurants/1/reservations/1/confirm"))
                     .andDo(print())
-                    .andExpected(status().isConflict())
-                    .andExpected(jsonPath("$.message").value("Cannot confirm time slot that is not available"));
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.message").value("Cannot confirm time slot that is not available"));
 
             verify(availabilityManagementUseCase).confirmReservation(1L);
         }
@@ -427,10 +427,10 @@ class AvailabilityControllerTest {
             mockMvc.perform(get("/api/restaurants/1/reservations")
                             .param("date", "2024-12-26"))
                     .andDo(print())
-                    .andExpected(status().isOk())
-                    .andExpected(jsonPath("$.content").isArray())
-                    .andExpected(jsonPath("$.content.length()").value(1))
-                    .andExpected(jsonPath("$.content[0].date").value("2024-12-26"));
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content.length()").value(1))
+                    .andExpect(jsonPath("$.content[0].date").value("2024-12-26"));
 
             verify(availabilityManagementUseCase).getReservationsForDate(1L, LocalDate.of(2024, 12, 26));
         }
@@ -449,10 +449,10 @@ class AvailabilityControllerTest {
             mockMvc.perform(get("/api/restaurants/1/reservations")
                             .param("status", "CONFIRMED"))
                     .andDo(print())
-                    .andExpected(status().isOk())
-                    .andExpected(jsonPath("$.content").isArray())
-                    .andExpected(jsonPath("$.content.length()").value(1))
-                    .andExpected(jsonPath("$.content[0].status").value("CONFIRMED"));
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content.length()").value(1))
+                    .andExpect(jsonPath("$.content[0].status").value("CONFIRMED"));
 
             verify(availabilityManagementUseCase).getReservationsByStatus(1L, TimeSlotStatus.CONFIRMED);
         }

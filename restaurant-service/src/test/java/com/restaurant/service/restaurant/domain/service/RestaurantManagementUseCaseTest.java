@@ -413,7 +413,7 @@ class RestaurantManagementUseCaseTest {
             assertThat(result.totalTables()).isEqualTo(3);
             assertThat(result.totalSeats()).isEqualTo(12);
             assertThat(result.averageTableSize()).isEqualTo(4.0);
-            assertThat(result.isActive()).isTrue();
+            assertThat(result.active()).isTrue();
 
             verify(restaurantRepository).findById(restaurantId);
         }

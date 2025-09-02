@@ -80,8 +80,8 @@ class TableControllerTest {
                     // HATEOAS links
                     .andExpect(jsonPath("$._links.self.href").exists())
                     .andExpect(jsonPath("$._links.update.href").exists())
-                    .andExpected(jsonPath("$._links.delete.href").exists())
-                    .andExpected(jsonPath("$._links.restaurant.href").exists());
+                    .andExpect(jsonPath("$._links.delete.href").exists())
+                    .andExpect(jsonPath("$._links.restaurant.href").exists());
 
             verify(tableManagementUseCase).createTable(any(TableManagementUseCase.CreateTableCommand.class));
         }
@@ -280,13 +280,13 @@ class TableControllerTest {
             // When & Then
             mockMvc.perform(get("/api/restaurants/1/tables"))
                     .andDo(print())
-                    .andExpected(status().isOk())
-                    .andExpected(jsonPath("$.content").isArray())
-                    .andExpected(jsonPath("$.content.length()").value(2))
-                    .andExpected(jsonPath("$.content[0].seats").value(4))
-                    .andExpected(jsonPath("$.content[1].seats").value(6))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content.length()").value(2))
+                    .andExpect(jsonPath("$.content[0].seats").value(4))
+                    .andExpect(jsonPath("$.content[1].seats").value(6))
                     // HATEOAS links
-                    .andExpected(jsonPath("$._links.self.href").exists());
+                    .andExpect(jsonPath("$._links.self.href").exists());
 
             verify(tableManagementUseCase).getRestaurantTables(1L);
         }
@@ -306,7 +306,7 @@ class TableControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
-                    .andExpected(jsonPath("$.content[0].location").value("WINDOW"));
+                    .andExpect(jsonPath("$.content[0].location").value("WINDOW"));
 
             verify(tableManagementUseCase).getTablesByLocation(1L, TableLocation.WINDOW);
         }
@@ -416,8 +416,8 @@ class TableControllerTest {
                     .andExpect(jsonPath("$.totalTables").value(5))
                     .andExpect(jsonPath("$.availableTables").value(4))
                     .andExpect(jsonPath("$.unavailableTables").value(1))
-                    .andExpected(jsonPath("$.totalSeats").value(20))
-                    .andExpected(jsonPath("$.availabilityRate").value(0.8));
+                    .andExpect(jsonPath("$.totalSeats").value(20))
+                    .andExpect(jsonPath("$.availabilityRate").value(0.8));
 
             verify(tableManagementUseCase).getTableUtilization(1L);
         }

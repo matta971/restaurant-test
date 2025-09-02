@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -92,6 +93,18 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
 
     @Override
     @Transactional(readOnly = true)
+    public List<Restaurant> getAllRestaurants() {
+        return restaurantRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Restaurant> getActiveRestaurants() {
+        return restaurantRepository.findAllActive();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<Restaurant> searchRestaurants(String name, Pageable pageable) {
         List<Restaurant> restaurants;
 
@@ -107,6 +120,18 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
         List<Restaurant> pageContent = restaurants.subList(start, end);
 
         return new PageImpl<>(pageContent, pageable, restaurants.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Restaurant> searchRestaurantsByName(String name) {
+        return restaurantRepository.findByNameContaining(name);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Restaurant> searchRestaurantsByCity(String city) {
+        return restaurantRepository.findByCity(city);
     }
 
     @Override
@@ -170,6 +195,8 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
 
         int totalSeats = restaurant.getCapacity();
         int availableSeats = restaurant.getTotalAvailableSeats();
+        double averageTableSize = totalTables > 0 ? (double) totalSeats / totalTables : 0.0;
+        double currentAvailabilityRate = 1.0;
 
         return new RestaurantStats(
                 restaurant.getId(),
@@ -179,7 +206,18 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
                 (int) availableTables,
                 totalSeats,
                 availableSeats,
-                restaurant.isActive()
+                restaurant.isActive(),
+                currentAvailabilityRate,
+                averageTableSize
         );
+    }
+
+    private void validateRestaurantData(String name, LocalTime openingTime, LocalTime closingTime) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Restaurant name cannot be blank");
+        }
+        if (openingTime != null && closingTime != null && openingTime.isAfter(closingTime)) {
+            throw new IllegalArgumentException("Opening time cannot be after closing time");
+        }
     }
 }

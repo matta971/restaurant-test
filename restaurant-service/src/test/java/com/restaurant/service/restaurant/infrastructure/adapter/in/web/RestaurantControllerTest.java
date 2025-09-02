@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -97,7 +99,7 @@ class RestaurantControllerTest {
                     .andExpect(jsonPath("$.name").value("Le Petit Bistro"))
                     .andExpect(jsonPath("$.address").value("123 Rue de la Paix, Paris"))
                     .andExpect(jsonPath("$.email").value("contact@petitbistro.fr"))
-                    .andExpected(jsonPath("$.capacity").value(50))
+                    .andExpect(jsonPath("$.capacity").value(50))
                     .andExpect(jsonPath("$.active").value(true))
                     .andExpect(header().string("Location", "/api/restaurants/1"))
                     // HATEOAS links
@@ -379,18 +381,18 @@ class RestaurantControllerTest {
                             .param("size", "10")
                             .param("sort", "name,asc"))
                     .andDo(print())
-                    .andExpected(status().isOk())
-                    .andExpected(jsonPath("$.content").isArray())
-                    .andExpected(jsonPath("$.content.length()").value(2))
-                    .andExpected(jsonPath("$.content[0].name").value("Le Petit Bistro"))
-                    .andExpected(jsonPath("$.content[1].name").value("Big Bistro"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isArray())
+                    .andExpect(jsonPath("$.content.length()").value(2))
+                    .andExpect(jsonPath("$.content[0].name").value("Le Petit Bistro"))
+                    .andExpect(jsonPath("$.content[1].name").value("Big Bistro"))
                     // Pagination metadata
-                    .andExpected(jsonPath("$.totalElements").value(2))
-                    .andExpected(jsonPath("$.totalPages").value(1))
-                    .andExpected(jsonPath("$.size").value(10))
-                    .andExpected(jsonPath("$.number").value(0))
+                    .andExpect(jsonPath("$.totalElements").value(2))
+                    .andExpect(jsonPath("$.totalPages").value(1))
+                    .andExpect(jsonPath("$.size").value(10))
+                    .andExpect(jsonPath("$.number").value(0))
                     // HATEOAS links
-                    .andExpected(jsonPath("$._links.self.href").exists());
+                    .andExpect(jsonPath("$._links.self.href").exists());
 
             verify(restaurantManagementUseCase).getAllRestaurants(any());
         }
@@ -401,7 +403,7 @@ class RestaurantControllerTest {
             // Given
             List<Restaurant> searchResults = List.of(testRestaurant);
             
-            given(restaurantManagementUseCase.searchRestaurants(eq("Bistro"), eq(null), any()))
+            given(restaurantManagementUseCase.searchRestaurants(eq("Bistro"),  any()))
                     .willReturn(new PageImpl<>(searchResults, PageRequest.of(0, 10), 1));
 
             // When & Then
@@ -410,11 +412,11 @@ class RestaurantControllerTest {
                             .param("page", "0")
                             .param("size", "10"))
                     .andDo(print())
-                    .andExpected(status().isOk())
+                    .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
                     .andExpect(jsonPath("$.content[0].name").value("Le Petit Bistro"));
 
-            verify(restaurantManagementUseCase).searchRestaurants(eq("Bistro"), eq(null), any());
+            verify(restaurantManagementUseCase).searchRestaurants(eq("Bistro"),  any());
         }
 
         @Test
@@ -423,7 +425,7 @@ class RestaurantControllerTest {
             // Given
             List<Restaurant> searchResults = List.of(testRestaurant);
             
-            given(restaurantManagementUseCase.searchRestaurants(eq(null), eq("Paris"), any()))
+            given(restaurantManagementUseCase.searchRestaurants(eq("Paris"), any()))
                     .willReturn(new PageImpl<>(searchResults, PageRequest.of(0, 10), 1));
 
             // When & Then
@@ -436,7 +438,7 @@ class RestaurantControllerTest {
                     .andExpect(jsonPath("$.content.length()").value(1))
                     .andExpect(jsonPath("$.content[0].address").value("123 Rue de la Paix, Paris"));
 
-            verify(restaurantManagementUseCase).searchRestaurants(eq(null), eq("Paris"), any());
+            verify(restaurantManagementUseCase).searchRestaurants( eq("Paris"), any());
         }
     }
 

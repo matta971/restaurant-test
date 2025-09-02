@@ -227,8 +227,8 @@ class UseCaseIntegrationTest {
         assertThat(stats.totalTables()).isEqualTo(2);
         assertThat(stats.totalSeats()).isEqualTo(10);
         assertThat(stats.averageTableSize()).isEqualTo(5.0);
-        assertThat(stats.isActive()).isTrue();
-        assertThat(stats.currentAvailabilityRate()).isEqualTo(1.0);
+        assertThat(stats.active()).isTrue();
+        assertThat(stats.occupancyRate()).isEqualTo(1.0);
     }
 
     @Test

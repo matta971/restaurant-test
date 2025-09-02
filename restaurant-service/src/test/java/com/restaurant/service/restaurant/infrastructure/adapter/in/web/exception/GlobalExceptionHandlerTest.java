@@ -117,7 +117,7 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.error").value("Conflict"))
-                .andExpect(jsonPath("$.message").containsString("No tables available"));
+                .andExpect(jsonPath("$.message").value("No tables available"));
     }
 
     @Test
@@ -133,7 +133,7 @@ class GlobalExceptionHandlerTest {
                 .andDo(print())
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
-                .andExpected(jsonPath("$.message").value("Cannot confirm time slot that is not available"));
+                .andExpect(jsonPath("$.message").value("Cannot confirm time slot that is not available"));
     }
 
     @Test
@@ -156,17 +156,17 @@ class GlobalExceptionHandlerTest {
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpected(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpected(jsonPath("$.message").value("Validation failed"))
-                .andExpected(jsonPath("$.violations").isArray())
-                .andExpected(jsonPath("$.violations").isNotEmpty())
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.violations").isArray())
+                .andExpect(jsonPath("$.violations").isNotEmpty())
                 // Check that validation errors are present
-                .andExpected(jsonPath("$.violations[?(@.field == 'name')]").exists())
-                .andExpected(jsonPath("$.violations[?(@.field == 'address')]").exists())
-                .andExpected(jsonPath("$.violations[?(@.field == 'email')]").exists())
-                .andExpected(jsonPath("$.violations[?(@.field == 'capacity')]").exists());
+                .andExpect(jsonPath("$.violations[?(@.field == 'name')]").exists())
+                .andExpect(jsonPath("$.violations[?(@.field == 'address')]").exists())
+                .andExpect(jsonPath("$.violations[?(@.field == 'email')]").exists())
+                .andExpect(jsonPath("$.violations[?(@.field == 'capacity')]").exists());
     }
 
     @Test
@@ -186,8 +186,8 @@ class GlobalExceptionHandlerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpected(jsonPath("$.status").value(400))
-                .andExpected(jsonPath("$.message").value("Restaurant name cannot be null or empty"));
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Restaurant name cannot be null or empty"));
     }
 
     @Test
@@ -200,12 +200,12 @@ class GlobalExceptionHandlerTest {
         // When & Then
         mockMvc.perform(get("/api/restaurants/1"))
                 .andDo(print())
-                .andExpected(status().isInternalServerError())
-                .andExpected(jsonPath("$.timestamp").exists())
-                .andExpected(jsonPath("$.status").value(500))
-                .andExpected(jsonPath("$.error").value("Internal Server Error"))
-                .andExpected(jsonPath("$.message").value("An unexpected error occurred"))
-                .andExpected(jsonPath("$.path").value("/api/restaurants/1"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message").value("An unexpected error occurred"))
+                .andExpect(jsonPath("$.path").value("/api/restaurants/1"));
     }
 
     @Test
@@ -217,9 +217,9 @@ class GlobalExceptionHandlerTest {
                         .content("{invalid json}"))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpected(jsonPath("$.status").value(400))
-                .andExpected(jsonPath("$.error").value("Bad Request"))
-                .andExpected(jsonPath("$.message").containsString("JSON parse error"));
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("JSON parse error"));
     }
 
     @Test
@@ -230,8 +230,8 @@ class GlobalExceptionHandlerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpected(jsonPath("$.status").value(400))
-                .andExpected(jsonPath("$.message").containsString("Required request body is missing"));
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Required request body is missing"));
     }
 
     @Test
@@ -240,9 +240,9 @@ class GlobalExceptionHandlerTest {
         // When & Then - POST to a GET-only endpoint
         mockMvc.perform(post("/api/restaurants/1"))
                 .andDo(print())
-                .andExpected(status().isMethodNotAllowed())
-                .andExpected(jsonPath("$.status").value(405))
-                .andExpected(jsonPath("$.error").value("Method Not Allowed"));
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(jsonPath("$.error").value("Method Not Allowed"));
     }
 
     @Test
@@ -253,9 +253,9 @@ class GlobalExceptionHandlerTest {
                         .contentType(MediaType.APPLICATION_XML)
                         .content("<restaurant></restaurant>"))
                 .andDo(print())
-                .andExpected(status().isUnsupportedMediaType())
-                .andExpected(jsonPath("$.status").value(415))
-                .andExpected(jsonPath("$.error").value("Unsupported Media Type"));
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.status").value(415))
+                .andExpect(jsonPath("$.error").value("Unsupported Media Type"));
     }
 
     // Test DTOs
