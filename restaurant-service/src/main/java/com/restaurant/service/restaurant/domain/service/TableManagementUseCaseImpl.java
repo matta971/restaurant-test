@@ -27,6 +27,9 @@ public class TableManagementUseCaseImpl implements TableManagementUseCase {
 
     @Override
     public RestaurantTable createTable(CreateTableCommand command) {
+        if (command == null) {
+            throw new IllegalArgumentException("CreateTableCommand cannot be null");
+        }
         var restaurant = restaurantRepository.findById(command.restaurantId())
                 .orElseThrow(() -> new RuntimeException("Restaurant not found: " + command.restaurantId()));
 
@@ -63,6 +66,9 @@ public class TableManagementUseCaseImpl implements TableManagementUseCase {
     @Override
     @Transactional(readOnly = true)
     public RestaurantTable getTable(Long tableId) {
+        if (tableId == null) {
+            throw new IllegalArgumentException("Table ID cannot be null");
+        }
         return tableRepository.findById(tableId)
                 .orElseThrow(() -> new TableNotFoundException(tableId));
     }

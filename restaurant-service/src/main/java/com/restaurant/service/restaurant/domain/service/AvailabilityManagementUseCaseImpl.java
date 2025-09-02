@@ -70,6 +70,11 @@ public class AvailabilityManagementUseCaseImpl implements AvailabilityManagement
         var table = tableRepository.findById(command.tableId())
                 .orElseThrow(() -> new RuntimeException("Table not found: " + command.tableId()));
 
+        availabilityService.validateReservationConstraints(
+                table.getRestaurant(), table, command.partySize(),
+                command.date(), command.startTime(), command.endTime()
+        );
+
         var timeSlot = new TimeSlot(
                 command.date(),
                 command.startTime(),
@@ -142,18 +147,20 @@ public class AvailabilityManagementUseCaseImpl implements AvailabilityManagement
         var timeSlot = timeSlotRepository.findById(timeSlotId)
                 .orElseThrow(() -> new TimeSlotNotFoundException(timeSlotId));
 
-        var previousStatus = timeSlot.getStatus().name();
-        timeSlot.cancel();
+        try {
+            timeSlot.cancel();
+        } catch (IllegalStateException e) {
+            throw new InvalidReservationStateException(e.getMessage());
+        }
+
         var savedTimeSlot = timeSlotRepository.save(timeSlot);
 
-        // Publish domain event
         var event = new EventPublisherPort.ReservationStatusChangedEvent(
-                timeSlot.getTable() != null && timeSlot.getTable().getRestaurant() != null ?
-                        timeSlot.getTable().getRestaurant().getId() : null,
-                timeSlot.getTable() != null ? timeSlot.getTable().getId() : null,
+                savedTimeSlot.getTable().getRestaurant().getId(),
+                savedTimeSlot.getTable().getId(),
                 savedTimeSlot.getId(),
-                previousStatus,
-                savedTimeSlot.getStatus().name(),
+                "CONFIRMED",
+                "CANCELLED",
                 Instant.now()
         );
         eventPublisher.publishEvent(event);

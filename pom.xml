@@ -29,8 +29,8 @@
 
     <modules>
         <module>restaurant-service</module>
-        <module>reservation-service</module>
-        <module>api-gateway</module>
+<!--        <module>reservation-service</module>-->
+<!--        <module>api-gateway</module>-->
         <module>common</module>
     </modules>
 

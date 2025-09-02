@@ -17,7 +17,7 @@ class TimeSlotStatusTest {
     void shouldHaveAllExpectedTimeSlotStatuses() {
         TimeSlotStatus[] statuses = TimeSlotStatus.values();
 
-        assertThat(statuses).hasSize(4);
+        assertThat(statuses).hasSize(5);
         assertThat(statuses).contains(
             TimeSlotStatus.AVAILABLE,
             TimeSlotStatus.RESERVED,
