@@ -1,0 +1,114 @@
+# Restaurant Service Configuration
+server:
+  port: 8081
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: restaurant-service
+
+  profiles:
+    active: default
+
+  # Database Configuration (H2)
+  datasource:
+    url: jdbc:h2:mem:restaurant_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: restaurant
+    password: password
+
+  # H2 Console (for development)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  # Liquibase
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
+  # JSON Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Europe/Paris
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,liquibase
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Application Information
+info:
+  app:
+    name: Restaurant Service
+    description: Manages restaurants and their availability
+    version: 1.0.0
+    architecture: Hexagonal Architecture
+    database: H2 (In-Memory)
+
+# Logging Configuration
+logging:
+  level:
+    com.restaurant.service.restaurant: DEBUG
+    org.springframework.cloud: DEBUG
+    org.hibernate.SQL: DEBUG
+    liquibase: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  info:
+    title: Restaurant Service API
+    description: REST API for managing restaurants and availability
+    version: 1.0.0
+
+---
+# Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:h2:mem:restaurant_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+
+server:
+  port: 8081
+
+logging:
+  level:
+    com.restaurant.service.restaurant: INFO
+    org.hibernate.SQL: WARN

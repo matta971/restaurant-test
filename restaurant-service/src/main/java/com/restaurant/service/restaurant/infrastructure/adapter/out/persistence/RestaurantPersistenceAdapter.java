@@ -1,73 +1,340 @@
 package com.restaurant.service.restaurant.infrastructure.adapter.out.persistence;
 
 import com.restaurant.service.restaurant.domain.model.Restaurant;
+import com.restaurant.service.restaurant.domain.model.RestaurantTable;
+import com.restaurant.service.restaurant.domain.model.TimeSlot;
 import com.restaurant.service.restaurant.domain.port.out.RestaurantRepositoryPort;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.entity.RestaurantEntity;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.entity.RestaurantTableEntity;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.entity.TimeSlotEntity;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.mapper.RestaurantMapper;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.mapper.RestaurantTableMapper;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.mapper.TimeSlotMapper;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.repository.RestaurantJpaRepository;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.repository.RestaurantTableJpaRepository;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.repository.TimeSlotJpaRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
- * Concrete adapter that implements RestaurantRepositoryPort
- * This adapter delegates to the Spring Data JPA repository
- * Following hexagonal architecture principles
+ * JPA implementation of RestaurantRepositoryPort
+ * Handles persistence operations for restaurants, tables, and time slots
  */
 @Component
+@Slf4j
+@RequiredArgsConstructor
+@Transactional
 public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
 
-    private final RestaurantJpaAdapter restaurantJpaRepository;
+    private final RestaurantJpaRepository restaurantRepository;
+    private final RestaurantTableJpaRepository tableRepository;
+    private final TimeSlotJpaRepository timeSlotRepository;
 
-    public RestaurantPersistenceAdapter(RestaurantJpaAdapter restaurantJpaRepository) {
-        this.restaurantJpaRepository = restaurantJpaRepository;
-    }
+    private final RestaurantMapper restaurantMapper;
+    private final RestaurantTableMapper tableMapper;
+    private final TimeSlotMapper timeSlotMapper;
+
+    // ============ Restaurant Operations ============
 
     @Override
     public Restaurant save(Restaurant restaurant) {
-        return restaurantJpaRepository.save(restaurant);
+        log.debug("Saving restaurant: {}", restaurant.getName());
+
+        if (restaurant.getId() == null) {
+            // Create new restaurant
+            RestaurantEntity entity = restaurantMapper.toEntity(restaurant);
+            RestaurantEntity savedEntity = restaurantRepository.save(entity);
+            return restaurantMapper.toDomain(savedEntity);
+        } else {
+            // Update existing restaurant
+            return restaurantRepository.findById(restaurant.getId())
+                    .map(existingEntity -> {
+                        restaurantMapper.updateEntity(existingEntity, restaurant);
+                        RestaurantEntity updatedEntity = restaurantRepository.save(existingEntity);
+                        return restaurantMapper.toDomain(updatedEntity);
+                    })
+                    .orElseThrow(() -> new IllegalArgumentException("Restaurant not found with id: " + restaurant.getId()));
+        }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Restaurant> findById(Long id) {
-        return restaurantJpaRepository.findById(id);
+        log.debug("Finding restaurant by id: {}", id);
+        return restaurantRepository.findById(id)
+                .map(restaurantMapper::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Restaurant> findByIdWithTables(Long id) {
+        log.debug("Finding restaurant with tables by id: {}", id);
+        return restaurantRepository.findByIdWithTables(id)
+                .map(restaurantMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Restaurant> findByEmail(String email) {
+        log.debug("Finding restaurant by email: {}", email);
+        return restaurantRepository.findByEmail(email)
+                .map(restaurantMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Restaurant> findAll() {
-        return restaurantJpaRepository.findAll();
+        log.debug("Finding all restaurants");
+        return restaurantRepository.findAll().stream()
+                .map(restaurantMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Restaurant> findAllActive() {
-        return restaurantJpaRepository.findAllActive();
+    @Transactional(readOnly = true)
+    public Page<Restaurant> findAll(Pageable pageable) {
+        log.debug("Finding all restaurants with pagination: {}", pageable);
+        return restaurantRepository.findAll(pageable)
+                .map(restaurantMapper::toDomain);
     }
 
     @Override
-    public List<Restaurant> findByNameContaining(String name) {
-        return restaurantJpaRepository.findByNameContaining(name);
+    @Transactional(readOnly = true)
+    public List<Restaurant> findActiveRestaurants() {
+        log.debug("Finding active restaurants");
+        return restaurantRepository.findByActiveTrue().stream()
+                .map(restaurantMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<Restaurant> findActiveRestaurants(Pageable pageable) {
+        log.debug("Finding active restaurants with pagination: {}", pageable);
+        return restaurantRepository.findByActiveTrue(pageable)
+                .map(restaurantMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Restaurant> searchByName(String name) {
+        log.debug("Searching restaurants by name: {}", name);
+        return restaurantRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(restaurantMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Restaurant> searchByName(String name, Pageable pageable) {
+        log.debug("Searching restaurants by name with pagination: {} - {}", name, pageable);
+        return restaurantRepository.findByNameContainingIgnoreCase(name, pageable)
+                .map(restaurantMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Restaurant> findByCity(String city) {
-        return restaurantJpaRepository.findByCity(city);
+        log.debug("Finding restaurants by city: {}", city);
+        return restaurantRepository.findByCity(city).stream()
+                .map(restaurantMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public boolean existsById(Long id) {
-        return restaurantJpaRepository.existsById(id);
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        log.debug("Checking if restaurant exists by email: {}", email);
+        return restaurantRepository.findByEmail(email).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByEmailAndIdNot(String email, Long id) {
+        log.debug("Checking if restaurant exists by email {} excluding id: {}", email, id);
+        return restaurantRepository.existsByEmailAndIdNot(email, id);
     }
 
     @Override
     public void deleteById(Long id) {
-        restaurantJpaRepository.deleteById(id);
+        log.debug("Deleting restaurant by id: {}", id);
+        restaurantRepository.deleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long count() {
-        return restaurantJpaRepository.count();
+        return restaurantRepository.count();
     }
 
     @Override
-    public long countActive() {
-        return restaurantJpaRepository.countActive();
+    @Transactional(readOnly = true)
+    public long countActiveRestaurants() {
+        return restaurantRepository.countByActiveTrue();
+    }
+
+    // ============ Table Operations ============
+
+    @Override
+    public RestaurantTable saveTable(RestaurantTable table) {
+        log.debug("Saving table: {} seats at {}", table.getSeats(), table.getLocation());
+
+        if (table.getId() == null) {
+            // Create new table
+            RestaurantTableEntity entity = tableMapper.toEntity(table);
+            RestaurantTableEntity savedEntity = tableRepository.save(entity);
+            return tableMapper.toDomain(savedEntity);
+        } else {
+            // Update existing table
+            return tableRepository.findById(table.getId())
+                    .map(existingEntity -> {
+                        tableMapper.updateEntity(existingEntity, table);
+                        RestaurantTableEntity updatedEntity = tableRepository.save(existingEntity);
+                        return tableMapper.toDomain(updatedEntity);
+                    })
+                    .orElseThrow(() -> new IllegalArgumentException("Table not found with id: " + table.getId()));
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<RestaurantTable> findTableById(Long id) {
+        log.debug("Finding table by id: {}", id);
+        return tableRepository.findById(id)
+                .map(tableMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<RestaurantTable> findTableByIdWithTimeSlots(Long id) {
+        log.debug("Finding table with time slots by id: {}", id);
+        return tableRepository.findByIdWithTimeSlots(id)
+                .map(tableMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTable> findTablesByRestaurantId(Long restaurantId) {
+        log.debug("Finding tables by restaurant id: {}", restaurantId);
+        return tableRepository.findByRestaurantId(restaurantId).stream()
+                .map(tableMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTable> findAvailableTablesByRestaurantId(Long restaurantId) {
+        log.debug("Finding available tables by restaurant id: {}", restaurantId);
+        return tableRepository.findByRestaurantIdAndAvailableTrue(restaurantId).stream()
+                .map(tableMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTable> findAvailableTablesForDateAndTime(Long restaurantId, LocalDate date,
+                                                                   LocalTime startTime, LocalTime endTime,
+                                                                   Integer partySize) {
+        log.debug("Finding available tables for restaurant {} on {} from {} to {} for {} people",
+                restaurantId, date, startTime, endTime, partySize);
+        return tableRepository.findAvailableTablesForDateAndTime(restaurantId, date, startTime, endTime, partySize)
+                .stream()
+                .map(tableMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteTableById(Long id) {
+        log.debug("Deleting table by id: {}", id);
+        tableRepository.deleteById(id);
+    }
+
+    // ============ Time Slot Operations ============
+
+    @Override
+    public TimeSlot saveTimeSlot(TimeSlot timeSlot) {
+        log.debug("Saving time slot: {} on {} from {} to {}",
+                timeSlot.getPartySize(), timeSlot.getDate(), timeSlot.getStartTime(), timeSlot.getEndTime());
+
+        if (timeSlot.getId() == null) {
+            // Create new time slot
+            TimeSlotEntity entity = timeSlotMapper.toEntity(timeSlot);
+            TimeSlotEntity savedEntity = timeSlotRepository.save(entity);
+            return timeSlotMapper.toDomain(savedEntity);
+        } else {
+            // Update existing time slot
+            return timeSlotRepository.findById(timeSlot.getId())
+                    .map(existingEntity -> {
+                        timeSlotMapper.updateEntity(existingEntity, timeSlot);
+                        TimeSlotEntity updatedEntity = timeSlotRepository.save(existingEntity);
+                        return timeSlotMapper.toDomain(updatedEntity);
+                    })
+                    .orElseThrow(() -> new IllegalArgumentException("Time slot not found with id: " + timeSlot.getId()));
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<TimeSlot> findTimeSlotById(Long id) {
+        log.debug("Finding time slot by id: {}", id);
+        return timeSlotRepository.findById(id)
+                .map(timeSlotMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<TimeSlot> findTimeSlotByIdWithDetails(Long id) {
+        log.debug("Finding time slot with details by id: {}", id);
+        return timeSlotRepository.findByIdWithDetails(id)
+                .map(timeSlotMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TimeSlot> findTimeSlotsByTableAndDate(Long tableId, LocalDate date) {
+        log.debug("Finding time slots by table {} and date {}", tableId, date);
+        return timeSlotRepository.findByTableIdAndDate(tableId, date).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TimeSlot> findUpcomingReservations(Long restaurantId, LocalDate fromDate) {
+        log.debug("Finding upcoming reservations for restaurant {} from {}", restaurantId, fromDate);
+        return timeSlotRepository.findUpcomingReservations(restaurantId, fromDate).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TimeSlot> findReservationsByCustomerEmail(String email) {
+        log.debug("Finding reservations by customer email: {}", email);
+        return timeSlotRepository.findByCustomerEmailOrderByDateDescStartTimeDesc(email).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteTimeSlotById(Long id) {
+        log.debug("Deleting time slot by id: {}", id);
+        timeSlotRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteOldTimeSlots(LocalDate cutoffDate) {
+        log.debug("Deleting time slots before: {}", cutoffDate);
+        timeSlotRepository.deleteByDateBefore(cutoffDate);
     }
 }

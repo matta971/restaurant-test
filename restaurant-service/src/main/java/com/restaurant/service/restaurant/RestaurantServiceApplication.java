@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
@@ -15,7 +16,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "com.restaurant.common"
 })
 @EntityScan("com.restaurant.service.restaurant.domain.model")
-//@EnableJpaRepositories("com.restaurant.service.restaurant.infrastructure.adapter.out.persistence")
+@EnableJpaRepositories("com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.repository")
+@EnableJpaAuditing
 @LoadBalancerClient(name = "restaurant-service")
 public class RestaurantServiceApplication {
 

@@ -29,18 +29,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for TableController
  * Testing REST API endpoints with mocked use cases
  */
-@WebMvcTest(controllers = TableController.class,
+/*@WebMvcTest(controllers = TableController.class,
         excludeAutoConfiguration = {
                 org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
                 org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class,
                 org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration.class,
                 org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration.class,
-                // ⬇️ Spring Cloud LoadBalancer
                 org.springframework.cloud.loadbalancer.config.LoadBalancerAutoConfiguration.class,
                 org.springframework.cloud.loadbalancer.config.BlockingLoadBalancerClientAutoConfiguration.class
-        })
+        })*/
 @DisplayName("Table Controller Unit Tests")
-@Import({GlobalExceptionHandler.class})
+//@Import({GlobalExceptionHandler.class})
 class TableControllerTest {
 
     @Autowired

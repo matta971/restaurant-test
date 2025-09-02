@@ -1,0 +1,139 @@
+# Reservation Service Configuration
+server:
+  port: 8082
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: reservation-service
+
+  profiles:
+    active: default
+
+  # Database Configuration (H2)
+  datasource:
+    url: jdbc:h2:mem:reservation_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: reservation
+    password: password
+
+  # H2 Console (for development)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  # Liquibase
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
+  # JSON Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Europe/Paris
+
+# Restaurant Service Client Configuration
+restaurant-service:
+  url: http://localhost:8081
+  timeout:
+    read: 5000
+    connect: 2000
+
+# Feign Configuration
+feign:
+  client:
+    config:
+      restaurant-service:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: basic
+        errorDecoder: com.restaurant.service.reservation.infrastructure.config.FeignErrorDecoder
+        requestInterceptors:
+          - com.restaurant.service.reservation.infrastructure.config.FeignRequestInterceptor
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,liquibase
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Application Information
+info:
+  app:
+    name: Reservation Service
+    description: Manages restaurant reservations
+    version: 1.0.0
+    architecture: Hexagonal Architecture
+    database: H2 (In-Memory)
+
+# Logging Configuration
+logging:
+  level:
+    com.restaurant.service.reservation: DEBUG
+    org.springframework.cloud: DEBUG
+    org.hibernate.SQL: DEBUG
+    feign: DEBUG
+    liquibase: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  info:
+    title: Reservation Service API
+    description: REST API for managing restaurant reservations
+    version: 1.0.0
+
+---
+# Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:h2:mem:reservation_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+
+server:
+  port: 8082
+
+# Restaurant Service URL for Docker
+restaurant-service:
+  url: http://restaurant-service:8081
+
+logging:
+  level:
+    com.restaurant.service.reservation: INFO
+    org.hibernate.SQL: WARN
+    feign: INFO

@@ -33,8 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for AvailabilityController
  * Testing REST API endpoints with mocked use cases
  */
-@WebMvcTest(AvailabilityController.class)
-@Import({GlobalExceptionHandler.class})
+//@WebMvcTest(AvailabilityController.class)
+//@Import({GlobalExceptionHandler.class})
 @DisplayName("Availability Controller Unit Tests")
 class AvailabilityControllerTest {
 

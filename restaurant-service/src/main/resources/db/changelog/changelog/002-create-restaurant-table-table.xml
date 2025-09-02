@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="002-create-restaurant-table-table" author="restaurant-system">
+        <comment>Create restaurant_table table</comment>
+
+        <createTable tableName="restaurant_table">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="restaurant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="seats" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="available" type="BOOLEAN" defaultValue="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="table_number" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="restaurant_table"
+                baseColumnNames="restaurant_id"
+                constraintName="fk_restaurant_table_restaurant"
+                referencedTableName="restaurant"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <createIndex tableName="restaurant_table" indexName="idx_restaurant_table_restaurant_id">
+            <column name="restaurant_id"/>
+        </createIndex>
+
+        <createIndex tableName="restaurant_table" indexName="idx_restaurant_table_location">
+            <column name="location"/>
+        </createIndex>
+
+        <createIndex tableName="restaurant_table" indexName="idx_restaurant_table_seats">
+            <column name="seats"/>
+        </createIndex>
+
+        <createIndex tableName="restaurant_table" indexName="idx_restaurant_table_available">
+            <column name="available"/>
+        </createIndex>
+
+        <addUniqueConstraint
+                tableName="restaurant_table"
+                columnNames="restaurant_id, table_number"
+                constraintName="uk_restaurant_table_number"/>
+
+        <rollback>
+            <dropTable tableName="restaurant_table"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

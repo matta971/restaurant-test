@@ -1,0 +1,141 @@
+# API Gateway Configuration
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: api-gateway
+
+  profiles:
+    active: default
+
+  # Gateway Configuration
+  cloud:
+    gateway:
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+            methods: GET,POST,PUT,DELETE
+        - name: CircuitBreaker
+          args:
+            name: defaultCircuitBreaker
+            fallbackUri: forward:/fallback
+
+      # Load Balancer Configuration
+      loadbalancer:
+        use404: true
+
+      # Global CORS Configuration
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+# JWT Configuration
+jwt:
+  secret: mySecretKey2024RestaurantReservationSystem
+  expiration: 86400 # 24 hours in seconds
+  header: Authorization
+  prefix: "Bearer "
+
+# Service URLs
+services:
+  restaurant:
+    url: http://localhost:8081
+  reservation:
+    url: http://localhost:8082
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+# Application Information
+info:
+  app:
+    name: API Gateway
+    description: Single entry point with JWT authentication and load balancing
+    version: 1.0.0
+    services:
+      - restaurant-service
+      - reservation-service
+
+# Logging Configuration
+logging:
+  level:
+    com.restaurant.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: Restaurant Service
+        url: http://localhost:8081/api-docs
+      - name: Reservation Service
+        url: http://localhost:8082/api-docs
+
+---
+# Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+server:
+  port: 8080
+
+# Service URLs for Docker
+services:
+  restaurant:
+    url: http://restaurant-service:8081
+  reservation:
+    url: http://reservation-service:8082
+
+# Update Swagger URLs for Docker
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Restaurant Service
+        url: http://restaurant-service:8081/api-docs
+      - name: Reservation Service
+        url: http://reservation-service:8082/api-docs
+
+logging:
+  level:
+    com.restaurant.gateway: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO

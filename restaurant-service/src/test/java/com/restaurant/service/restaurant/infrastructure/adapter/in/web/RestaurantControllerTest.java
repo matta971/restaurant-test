@@ -33,9 +33,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for RestaurantController
  * Testing REST API endpoints with mocked use cases
  */
-@WebMvcTest(RestaurantController.class
-
-)
+@WebMvcTest(RestaurantController.class)
+@Import({GlobalExceptionHandler.class, RestaurantWebMapper.class})
+@TestPropertySource(properties = {
+        "spring.cloud.loadbalancer.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=none"
+})
 @DisplayName("Restaurant Controller Unit Tests")
 class RestaurantControllerTest {
 
