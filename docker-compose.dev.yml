@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Restaurant Service (single instance for dev)
+  restaurant-service:
+    build:
+      context: .
+      dockerfile: restaurant-service/Dockerfile
+    image: restaurant-system/restaurant-service:latest
+    container_name: restaurant-service-dev
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SERVER_PORT=8081
+      - SPRING_H2_CONSOLE_ENABLED=true
+      - LOGGING_LEVEL_ROOT=DEBUG
+    networks:
+      - restaurant-network
+    volumes:
+      - ./logs:/app/logs
+
+  # Reservation Service (single instance for dev)
+  reservation-service:
+    build:
+      context: .
+      dockerfile: reservation-service/Dockerfile
+    image: restaurant-system/reservation-service:latest
+    container_name: reservation-service-dev
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SERVER_PORT=8082
+      - SPRING_H2_CONSOLE_ENABLED=true
+      - RESTAURANT_SERVICE_URL=http://restaurant-service:8081
+      - LOGGING_LEVEL_ROOT=DEBUG
+    networks:
+      - restaurant-network
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - restaurant-service
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: restaurant-system/api-gateway:latest
+    container_name: api-gateway-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SERVER_PORT=8080
+      - SERVICES_RESTAURANT_URL=http://restaurant-service:8081
+      - SERVICES_RESERVATION_URL=http://reservation-service:8082
+      - LOGGING_LEVEL_ROOT=DEBUG
+    networks:
+      - restaurant-network
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - restaurant-service
+      - reservation-service
+
+networks:
+  restaurant-network:
+    driver: bridge

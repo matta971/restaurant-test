@@ -5,11 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <!-- Initial schema creation will be added in future commits -->
-    <!-- This file serves as the master changelog for Reservation Service -->
-
-    <!-- Include future changesets here -->
-    <!-- <include file="db/changelog/001-create-reservation-tables.xml"/> -->
-    <!-- <include file="db/changelog/002-create-customer-tables.xml"/> -->
+    <include file="db/changelog/001-create-customer-tables.xml"/>
+    <include file="db/changelog/002-create-reservation-tables.xml"/>
+    <include file="db/changelog/003-add-indexes.xml"/>
 
 </databaseChangeLog>
