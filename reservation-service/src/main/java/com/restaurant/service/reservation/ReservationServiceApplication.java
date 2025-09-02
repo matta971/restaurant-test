@@ -2,22 +2,16 @@ package com.restaurant.service.reservation;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
- * @author matt_
+ * Main application class for Reservation Service
+ * Enables Feign clients for restaurant service communication
  */
-@SpringBootApplication(scanBasePackages = {
-    "com.restaurant.service.reservation",
-    "com.restaurant.common"
-})
-@EntityScan("com.restaurant.service.reservation.domain.model")
-@EnableJpaRepositories("com.restaurant.service.reservation.infrastructure.adapter.out.persistence")
-@EnableFeignClients("com.restaurant.service.reservation.infrastructure.adapter.out.client")
-@LoadBalancerClient(name = "reservation-service")
+@SpringBootApplication
+@EnableFeignClients
+@EnableTransactionManagement
 public class ReservationServiceApplication {
 
     public static void main(String[] args) {

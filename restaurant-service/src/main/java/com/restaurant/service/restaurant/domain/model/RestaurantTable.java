@@ -15,10 +15,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * RestaurantTable domain entity representing a table in a restaurant
+ * RestaurantTable domain representing a table in a restaurant
  */
-@Entity
-@jakarta.persistence.Table(name = "restaurant_tables")
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,43 +27,31 @@ public class RestaurantTable {
     private static final int MAX_SEATS = 8;
 
     @Setter
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Setter
-    @Column(name = "table_number", nullable = false, unique = true)
     private Integer tableNumber;
 
-    @Column(name = "seats", nullable = false)
     @Min(value = MIN_SEATS, message = "Table seats must be positive")
     @Max(value = MAX_SEATS, message = "Table seats cannot exceed 8 seats")
     private Integer seats;
 
-    @Column(name = "location", nullable = false)
     @Enumerated(EnumType.STRING)
     private TableLocation location;
 
     @Setter
-    @Column(name = "available", nullable = false)
     private Boolean available = true;
 
     @Setter
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
-    @OneToMany(mappedBy = "table", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TimeSlot> timeSlots = new ArrayList<>();
 
-    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Version
-    @Column(name = "version")
     private Long version;
 
     /**

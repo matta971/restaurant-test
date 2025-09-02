@@ -219,8 +219,15 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Restaurant name cannot be blank");
         }
-        if (openingTime != null && closingTime != null && openingTime.isAfter(closingTime)) {
-            throw new IllegalArgumentException("Opening time cannot be after closing time");
+
+        if (openingTime != null && closingTime != null) {
+            if (closingTime.equals(openingTime)) {
+                throw new IllegalArgumentException("Closing time cannot be the same as opening time");
+            }
+
+            if (openingTime.isBefore(LocalTime.of(5, 0)) || openingTime.isAfter(LocalTime.of(23, 30))) {
+                throw new IllegalArgumentException("Opening time should be between 05:00 and 23:30");
+            }
         }
     }
 }

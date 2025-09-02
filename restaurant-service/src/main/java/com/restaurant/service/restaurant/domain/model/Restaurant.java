@@ -209,8 +209,11 @@ public class Restaurant {
         if (closingTime == null) {
             throw new IllegalArgumentException("Closing time cannot be null");
         }
-        if (!closingTime.isAfter(openingTime)) {
-            throw new IllegalArgumentException("Closing time must be after opening time");
+        if (openingTime.isBefore(LocalTime.of(5, 0)) || openingTime.isAfter(LocalTime.of(23, 30))) {
+            throw new IllegalArgumentException("Opening time should be between 05:00 and 23:30");
+        }
+        if (closingTime.equals(openingTime)) {
+            throw new IllegalArgumentException("Closing time cannot be the same as opening time");
         }
     }
 
@@ -266,7 +269,19 @@ public class Restaurant {
      * @return true if within opening hours, false otherwise
      */
     public boolean isWithinOpeningHours(LocalTime startTime, LocalTime endTime) {
-        return !startTime.isBefore(openingTime) && !endTime.isAfter(closingTime);
+        // Si closingTime < openingTime, le restaurant ferme le lendemain
+        if (closingTime.isBefore(openingTime)) {
+            // Restaurant ouvert toute la nuit (ex: 18:00 - 01:00)
+            // L'horaire est valide si :
+            // - startTime >= openingTime (après l'ouverture le jour même)
+            // - OU endTime <= closingTime (avant la fermeture le lendemain)
+            return (startTime.compareTo(openingTime) >= 0) ||
+                    (endTime.compareTo(closingTime) <= 0);
+        } else {
+            // Restaurant avec horaires normaux (ex: 11:00 - 23:00)
+            return startTime.compareTo(openingTime) >= 0 &&
+                    endTime.compareTo(closingTime) <= 0;
+        }
     }
 
     // Equals and HashCode

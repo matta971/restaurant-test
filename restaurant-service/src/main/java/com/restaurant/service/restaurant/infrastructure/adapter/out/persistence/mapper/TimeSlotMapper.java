@@ -120,7 +120,7 @@ public class TimeSlotMapper {
     /**
      * Map TimeSlotStatus domain enum to TimeSlotStatusEntity
      */
-    private TimeSlotStatusEntity mapStatusToEntity(TimeSlotStatus domain) {
+    public TimeSlotStatusEntity mapStatusToEntity(TimeSlotStatus domain) {
         if (domain == null) {
             return TimeSlotStatusEntity.AVAILABLE;
         }

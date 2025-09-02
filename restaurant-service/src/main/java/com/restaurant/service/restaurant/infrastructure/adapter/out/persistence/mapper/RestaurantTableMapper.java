@@ -160,7 +160,7 @@ public class RestaurantTableMapper {
     /**
      * Map TableLocation domain enum to TableLocationEntity
      */
-    private TableLocationEntity mapLocationToEntity(TableLocation domain) {
+    public TableLocationEntity mapLocationToEntity(TableLocation domain) {
         if (domain == null) {
             return null;
         }

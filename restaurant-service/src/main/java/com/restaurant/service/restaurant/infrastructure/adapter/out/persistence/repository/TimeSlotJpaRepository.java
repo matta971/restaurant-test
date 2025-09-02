@@ -133,28 +133,28 @@ public interface TimeSlotJpaRepository extends JpaRepository<TimeSlotEntity, Lon
     /**
      * Find time slots for a restaurant and date
      */
-    @Query("SELECT ts FROM TimeSlot ts " +
+    @Query("SELECT ts FROM TimeSlotEntity ts " +
             "JOIN ts.table t " +
             "JOIN t.restaurant r " +
             "WHERE r.id = :restaurantId AND ts.date = :date " +
             "ORDER BY ts.startTime")
-    List<TimeSlot> findByRestaurantIdAndDate(@Param("restaurantId") Long restaurantId,
+    List<TimeSlotEntity> findByRestaurantIdAndDate(@Param("restaurantId") Long restaurantId,
                                              @Param("date") LocalDate date);
 
     /**
      * Find time slots for a restaurant by status
      */
-    @Query("SELECT ts FROM TimeSlot ts " +
+    @Query("SELECT ts FROM TimeSlotEntity ts " +
             "JOIN ts.table t " +
             "JOIN t.restaurant r " +
             "WHERE r.id = :restaurantId AND ts.status = :status " +
             "ORDER BY ts.date, ts.startTime")
-    List<TimeSlot> findByRestaurantIdAndStatus(@Param("restaurantId") Long restaurantId,
-                                               @Param("status") TimeSlotStatus status);
+    List<TimeSlotEntity> findByRestaurantIdAndStatus(@Param("restaurantId") Long restaurantId,
+                                               @Param("status") TimeSlotStatusEntity status);
 
     /**
      * Find expired time slots
      */
-    @Query("SELECT ts FROM TimeSlot ts WHERE ts.date < :beforeDate")
-    List<TimeSlot> findExpiredTimeSlots(@Param("beforeDate") LocalDate beforeDate);
+    @Query("SELECT ts FROM TimeSlotEntity ts WHERE ts.date < :beforeDate")
+    List<TimeSlotEntity> findExpiredTimeSlots(@Param("beforeDate") LocalDate beforeDate);
 }

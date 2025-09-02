@@ -11,7 +11,8 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = {
     "com.restaurant.service.restaurant.infrastructure.adapter.out.persistence",
     "com.restaurant.service.restaurant.infrastructure.adapter.out.event",
-    "com.restaurant.service.restaurant.infrastructure.adapter.out.notification"
+    "com.restaurant.service.restaurant.infrastructure.adapter.out.notification",
+    "com.restaurant.service.restaurant.infrastructure.adapter.in.web"
 })
 public class AdapterConfig {
     

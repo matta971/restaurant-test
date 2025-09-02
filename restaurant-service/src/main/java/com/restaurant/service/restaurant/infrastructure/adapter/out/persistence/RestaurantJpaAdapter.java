@@ -1,6 +1,7 @@
 package com.restaurant.service.restaurant.infrastructure.adapter.out.persistence;
 
 import com.restaurant.service.restaurant.domain.model.Restaurant;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.entity.RestaurantEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,15 +14,15 @@ import java.util.List;
  * This is the actual JPA repository interface that Spring Data will implement
  */
 @Repository
-public interface RestaurantJpaAdapter extends JpaRepository<Restaurant, Long> {
+public interface RestaurantJpaAdapter extends JpaRepository<RestaurantEntity, Long> {
 
     /**
      * Finds all active restaurants
      *
      * @return list of active restaurants
      */
-    @Query("SELECT r FROM Restaurant r WHERE r.active = true ORDER BY r.name")
-    List<Restaurant> findAllActive();
+    @Query("SELECT r FROM RestaurantEntity r WHERE r.active = true ORDER BY r.name")
+    List<RestaurantEntity> findAllActive();
 
     /**
      * Finds restaurants by name (case-insensitive, partial match)
@@ -29,8 +30,8 @@ public interface RestaurantJpaAdapter extends JpaRepository<Restaurant, Long> {
      * @param name the name to search for
      * @return list of matching restaurants
      */
-    @Query("SELECT r FROM Restaurant r WHERE LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY r.name")
-    List<Restaurant> findByNameContaining(@Param("name") String name);
+    @Query("SELECT r FROM RestaurantEntity r WHERE LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY r.name")
+    List<RestaurantEntity> findByNameContaining(@Param("name") String name);
 
     /**
      * Finds restaurants by city (extracted from address)
@@ -38,15 +39,15 @@ public interface RestaurantJpaAdapter extends JpaRepository<Restaurant, Long> {
      * @param city the city to search in
      * @return list of restaurants in the city
      */
-    @Query("SELECT r FROM Restaurant r WHERE LOWER(r.address) LIKE LOWER(CONCAT('%', :city, '%')) ORDER BY r.name")
-    List<Restaurant> findByCity(@Param("city") String city);
+    @Query("SELECT r FROM RestaurantEntity r WHERE LOWER(r.address) LIKE LOWER(CONCAT('%', :city, '%')) ORDER BY r.name")
+    List<RestaurantEntity> findByCity(@Param("city") String city);
 
     /**
      * Counts active restaurants
      *
      * @return active restaurant count
      */
-    @Query("SELECT COUNT(r) FROM Restaurant r WHERE r.active = true")
+    @Query("SELECT COUNT(r) FROM RestaurantEntity r WHERE r.active = true")
     long countActive();
 
     /**
@@ -55,6 +56,6 @@ public interface RestaurantJpaAdapter extends JpaRepository<Restaurant, Long> {
      * @return list of all restaurants ordered by name
      */
     @Override
-    @Query("SELECT r FROM Restaurant r ORDER BY r.name")
-    List<Restaurant> findAll();
+    @Query("SELECT r FROM RestaurantEntity r ORDER BY r.name")
+    List<RestaurantEntity> findAll();
 }

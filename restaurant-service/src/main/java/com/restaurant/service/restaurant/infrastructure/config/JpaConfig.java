@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     basePackages = "com.restaurant.service.restaurant.infrastructure.adapter.out.persistence"
 )
 @EntityScan(
-    basePackages = {"com.restaurant.service.restaurant.domain.model",
+    basePackages = {
             "com.restaurant.service.restaurant.infrastructure.adapter.out.persistence"
     }
 )

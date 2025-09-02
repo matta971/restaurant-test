@@ -3,6 +3,11 @@ package com.restaurant.service.restaurant.infrastructure.adapter.out.persistence
 import com.restaurant.service.restaurant.domain.model.TimeSlot;
 import com.restaurant.service.restaurant.domain.model.TimeSlotStatus;
 import com.restaurant.service.restaurant.domain.port.out.TimeSlotRepositoryPort;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.entity.TimeSlotEntity;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.mapper.TimeSlotMapper;
+import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.repository.TimeSlotJpaRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,65 +15,97 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Concrete adapter that implements TimeSlotRepositoryPort
  * This adapter delegates to the Spring Data JPA repository
  */
 @Component
+@Slf4j
+@RequiredArgsConstructor
+@Transactional
 public class TimeSlotPersistenceAdapter implements TimeSlotRepositoryPort {
 
-    private final TimeSlotJpaAdapter timeSlotJpaRepository;
-
-    public TimeSlotPersistenceAdapter(TimeSlotJpaAdapter timeSlotJpaRepository) {
-        this.timeSlotJpaRepository = timeSlotJpaRepository;
-    }
+    private final TimeSlotJpaRepository timeSlotJpaRepository;
+    private final TimeSlotMapper timeSlotMapper;
 
     @Override
     public TimeSlot save(TimeSlot timeSlot) {
-        return timeSlotJpaRepository.save(timeSlot);
+        log.debug("Saving time slot for date: {}", timeSlot.getDate());
+        var entity = timeSlotMapper.toEntity(timeSlot);
+        var savedEntity = timeSlotJpaRepository.save(entity);
+        return timeSlotMapper.toDomain(savedEntity);
     }
 
     @Override
     public Optional<TimeSlot> findById(Long id) {
-        return timeSlotJpaRepository.findById(id);
+        log.debug("Finding time slot by id: {}", id);
+        return timeSlotJpaRepository.findById(id)
+                .map(timeSlotMapper::toDomain);
     }
 
     @Override
     public List<TimeSlot> findByTableId(Long tableId) {
-        return timeSlotJpaRepository.findByTableId(tableId);
+        log.debug("Finding time slots by table id: {}", tableId);
+        return timeSlotJpaRepository.findByTableIdAndDate(tableId, LocalDate.now()).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<TimeSlot> findByTableIdAndDate(Long tableId, LocalDate date) {
-        return timeSlotJpaRepository.findByTableIdAndDate(tableId, date);
+        log.debug("Finding time slots by table id {} and date {}", tableId, date);
+        return timeSlotJpaRepository.findByTableIdAndDate(tableId, date).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<TimeSlot> findByTableIdAndStatus(Long tableId, TimeSlotStatus status) {
-        return timeSlotJpaRepository.findByTableIdAndStatus(tableId, status);
+        log.debug("Finding time slots by table id {} and status {}", tableId, status);
+        var entityStatus = timeSlotMapper.mapStatusToEntity(status);
+        return timeSlotJpaRepository.findByTableIdAndDateAndStatus(tableId, LocalDate.now(), entityStatus).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<TimeSlot> findOverlappingTimeSlots(Long tableId, LocalDate date,
                                                    LocalTime startTime, LocalTime endTime) {
-        return timeSlotJpaRepository.findOverlappingTimeSlots(tableId, date, startTime, endTime);
+        log.debug("Finding overlapping time slots for table {} on {} between {} and {}",
+                tableId, date, startTime, endTime);
+        return timeSlotJpaRepository.findConflictingTimeSlots(tableId, date, startTime, endTime).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<TimeSlot> findActiveTimeSlotsByTableIdAndDateRange(Long tableId, LocalDate startDate,
                                                                    LocalDate endDate) {
-        return timeSlotJpaRepository.findActiveTimeSlotsByTableIdAndDateRange(tableId, startDate, endDate);
+        return timeSlotJpaRepository.findByTableIdAndDate(tableId, startDate).stream()
+                .filter(entity -> !entity.getDate().isBefore(startDate) && !entity.getDate().isAfter(endDate))
+                .filter(entity -> entity.getStatus() != TimeSlotEntity.TimeSlotStatusEntity.CANCELLED)
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<TimeSlot> findByRestaurantIdAndDate(Long restaurantId, LocalDate date) {
-        return timeSlotJpaRepository.findByRestaurantIdAndDate(restaurantId, date);
+        log.debug("Finding time slots by restaurant id {} and date {}", restaurantId, date);
+        return timeSlotJpaRepository.findByRestaurantAndDate(restaurantId, date).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TimeSlot> findByRestaurantIdAndStatus(Long restaurantId, TimeSlotStatus status) {
-        return timeSlotJpaRepository.findByRestaurantIdAndStatus(restaurantId, status);
+        var entityStatus = timeSlotMapper.mapStatusToEntity(status);
+        return timeSlotJpaRepository.findByRestaurantAndDate(restaurantId, LocalDate.now()).stream()
+                .filter(entity -> entity.getStatus() == entityStatus)
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -97,8 +134,12 @@ public class TimeSlotPersistenceAdapter implements TimeSlotRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TimeSlot> findUpcomingByRestaurantId(Long restaurantId, LocalDate fromDate) {
-        return timeSlotJpaRepository.findUpcomingByRestaurantId(restaurantId, fromDate);
+        log.debug("Finding upcoming time slots by restaurant id {} from date {}", restaurantId, fromDate);
+        return timeSlotJpaRepository.findUpcomingReservations(restaurantId, fromDate).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -114,27 +155,36 @@ public class TimeSlotPersistenceAdapter implements TimeSlotRepositoryPort {
     @Override
     @Transactional
     public void deleteByTableId(Long tableId) {
-        timeSlotJpaRepository.deleteByTableId(tableId);
+        var timeSlots = timeSlotJpaRepository.findByTableIdAndDate(tableId, LocalDate.now());
+        timeSlotJpaRepository.deleteAll(timeSlots);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByTableId(Long tableId) {
-        return timeSlotJpaRepository.countByTableId(tableId);
+        return timeSlotJpaRepository.findByTableIdAndDate(tableId, LocalDate.now()).size();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByRestaurantIdAndDate(Long restaurantId, LocalDate date) {
-        return timeSlotJpaRepository.countByRestaurantIdAndDate(restaurantId, date);
+        log.debug("Counting time slots by restaurant id {} and date {}", restaurantId, date);
+        return timeSlotJpaRepository.findByRestaurantAndDate(restaurantId, date).size();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByRestaurantIdAndStatus(Long restaurantId, TimeSlotStatus status) {
-        return timeSlotJpaRepository.countByRestaurantIdAndStatus(restaurantId, status);
+        log.debug("Counting time slots by restaurant id {} and status {}", restaurantId, status);
+        var entityStatus = timeSlotMapper.mapStatusToEntity(status);
+        return timeSlotJpaRepository.countByRestaurantAndStatus(restaurantId, entityStatus);
     }
 
     @Override
     public List<TimeSlot> findExpiredTimeSlots(LocalDate cutoffDate) {
-        return timeSlotJpaRepository.findExpiredTimeSlots(cutoffDate);
+        return timeSlotJpaRepository.findExpiredTimeSlots(cutoffDate).stream()
+                .map(timeSlotMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
