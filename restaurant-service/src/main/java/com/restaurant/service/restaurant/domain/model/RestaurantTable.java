@@ -216,6 +216,7 @@ public class RestaurantTable {
         return new ArrayList<>(timeSlots); // Return defensive copy
     }
 
+
     // Equals and HashCode
 
     @Override
