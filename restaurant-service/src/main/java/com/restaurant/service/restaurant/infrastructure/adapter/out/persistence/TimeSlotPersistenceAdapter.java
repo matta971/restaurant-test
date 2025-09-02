@@ -101,4 +101,9 @@ public class TimeSlotPersistenceAdapter implements TimeSlotRepositoryPort {
     public long countByRestaurantIdAndStatus(Long restaurantId, TimeSlotStatus status) {
         return timeSlotJpaRepository.countByRestaurantIdAndStatus(restaurantId, status);
     }
+
+    @Override
+    public List<TimeSlot> findExpiredTimeSlots(LocalDate beforeDate) {
+        return timeSlotJpaRepository.findExpiredTimeSlots(beforeDate);
+    }
 }

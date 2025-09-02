@@ -89,6 +89,7 @@ public class AvailabilityManagementUseCaseImpl implements AvailabilityManagement
                 savedTimeSlot.getStartTime(),
                 savedTimeSlot.getEndTime(),
                 savedTimeSlot.getReservedSeats(),
+                savedTimeSlot.getCustomerEmail(),
                 Instant.now()
         );
         eventPublisher.publishEvent(event);

@@ -46,6 +46,7 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
                 savedRestaurant.getId(),
                 savedRestaurant.getName(),
                 savedRestaurant.getAddress(),
+                savedRestaurant.getEmail(),
                 savedRestaurant.getCapacity(),
                 Instant.now()
         );
@@ -145,6 +146,7 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
         // Publish domain event
         var event = new EventPublisherPort.RestaurantStatusChangedEvent(
                 savedRestaurant.getId(),
+                savedRestaurant.getName(),
                 true,
                 Instant.now()
         );
@@ -164,6 +166,7 @@ public class RestaurantManagementUseCaseImpl implements RestaurantManagementUseC
         // Publish domain event
         var event = new EventPublisherPort.RestaurantStatusChangedEvent(
                 savedRestaurant.getId(),
+                savedRestaurant.getName(),
                 false,
                 Instant.now()
         );

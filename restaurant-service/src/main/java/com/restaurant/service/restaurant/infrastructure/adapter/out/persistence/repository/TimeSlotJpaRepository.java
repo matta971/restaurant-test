@@ -1,5 +1,7 @@
 package com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.repository;
 
+import com.restaurant.service.restaurant.domain.model.TimeSlot;
+import com.restaurant.service.restaurant.domain.model.TimeSlotStatus;
 import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.entity.TimeSlotEntity;
 import com.restaurant.service.restaurant.infrastructure.adapter.out.persistence.entity.TimeSlotEntity.TimeSlotStatusEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -127,4 +129,32 @@ public interface TimeSlotJpaRepository extends JpaRepository<TimeSlotEntity, Lon
      * Delete old time slots (cleanup)
      */
     void deleteByDateBefore(LocalDate cutoffDate);
+
+    /**
+     * Find time slots for a restaurant and date
+     */
+    @Query("SELECT ts FROM TimeSlot ts " +
+            "JOIN ts.table t " +
+            "JOIN t.restaurant r " +
+            "WHERE r.id = :restaurantId AND ts.date = :date " +
+            "ORDER BY ts.startTime")
+    List<TimeSlot> findByRestaurantIdAndDate(@Param("restaurantId") Long restaurantId,
+                                             @Param("date") LocalDate date);
+
+    /**
+     * Find time slots for a restaurant by status
+     */
+    @Query("SELECT ts FROM TimeSlot ts " +
+            "JOIN ts.table t " +
+            "JOIN t.restaurant r " +
+            "WHERE r.id = :restaurantId AND ts.status = :status " +
+            "ORDER BY ts.date, ts.startTime")
+    List<TimeSlot> findByRestaurantIdAndStatus(@Param("restaurantId") Long restaurantId,
+                                               @Param("status") TimeSlotStatus status);
+
+    /**
+     * Find expired time slots
+     */
+    @Query("SELECT ts FROM TimeSlot ts WHERE ts.date < :beforeDate")
+    List<TimeSlot> findExpiredTimeSlots(@Param("beforeDate") LocalDate beforeDate);
 }

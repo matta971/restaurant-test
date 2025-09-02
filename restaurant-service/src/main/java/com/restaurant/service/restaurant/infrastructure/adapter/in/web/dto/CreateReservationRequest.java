@@ -25,5 +25,6 @@ public record CreateReservationRequest(
     
     @Positive(message = "Party size must be positive")
     @Schema(description = "Party size", example = "4")
-    Integer partySize
+    Integer partySize,
+    @NotBlank String customerEmail
 ) {}

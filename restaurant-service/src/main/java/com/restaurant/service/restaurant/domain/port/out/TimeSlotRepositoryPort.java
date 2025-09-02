@@ -156,13 +156,13 @@ public interface TimeSlotRepositoryPort {
     List<TimeSlot> findExpiredTimeSlots(LocalDate cutoffDate);
 
     /**
-     * Gets utilization statistics for a restaurant on a specific date
+     * Finds upcoming time slots for a restaurant starting from a specific date
      *
      * @param restaurantId the restaurant ID
-     * @param date the date
-     * @return utilization data
+     * @param fromDate the starting date
+     * @return list of upcoming time slots
      */
-    UtilizationStats getUtilizationStats(Long restaurantId, LocalDate date);
+    List<TimeSlot> findUpcomingByRestaurantId(Long restaurantId, LocalDate fromDate);
 
     /**
      * Data structure for utilization statistics

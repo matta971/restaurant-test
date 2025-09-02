@@ -18,7 +18,8 @@ public class AvailabilityWebMapper {
             request.date(),
             request.startTime(),
             request.endTime(),
-            request.partySize()
+            request.partySize(),
+            request.customerEmail()
         );
     }
 
