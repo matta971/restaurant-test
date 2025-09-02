@@ -1,0 +1,61 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+# - "first_rules.yml"
+# - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway monitoring
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['api-gateway:8080']
+    scrape_timeout: 5s
+
+  # Restaurant Service instances
+  - job_name: 'restaurant-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'restaurant-service-1:8081'
+          - 'restaurant-service-2:8081'
+    scrape_timeout: 10s
+
+  # Reservation Service instances
+  - job_name: 'reservation-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'reservation-service-1:8082'
+          - 'reservation-service-2:8082'
+    scrape_timeout: 10s
+
+  # Nginx Load Balancer (if nginx-prometheus-exporter is added)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['load-balancer:9113']
+    scrape_interval: 15s
+    scrape_timeout: 5s
+
+  # System metrics (if node-exporter is added)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093

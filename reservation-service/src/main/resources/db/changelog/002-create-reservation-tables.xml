@@ -42,7 +42,9 @@
             <column name="cancelled_at" type="TIMESTAMP"/>
             <column name="cancellation_reason" type="VARCHAR(500)"/>
         </createTable>
+    </changeSet>
 
+    <changeSet id="002-add-foreign-keys-reservations" author="reservation-service">
         <addForeignKeyConstraint
                 baseTableName="reservations"
                 baseColumnNames="customer_id"
@@ -50,16 +52,44 @@
                 referencedTableName="customers"
                 referencedColumnNames="id"
                 onDelete="CASCADE"/>
+    </changeSet>
 
-        <addCheckConstraint
-                tableName="reservations"
-                constraintName="ck_reservations_party_size"
-                checkCondition="party_size > 0 AND party_size <= 12"/>
+    <changeSet id="002-add-check-constraints-reservations" author="reservation-service">
+        <!-- H2-compatible constraint syntax -->
+        <sql>
+            ALTER TABLE reservations ADD CONSTRAINT ck_reservations_party_size CHECK (party_size > 0 AND party_size &lt;= 12);
+        </sql>
 
-        <addCheckConstraint
-                tableName="reservations"
-                constraintName="ck_reservations_times"
-                checkCondition="start_time < end_time"/>
+        <sql>
+            ALTER TABLE reservations ADD CONSTRAINT ck_reservations_times CHECK (start_time &lt; end_time);
+        </sql>
+
+        <sql>
+            ALTER TABLE reservations ADD CONSTRAINT ck_reservations_status
+            CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="002-add-indexes-reservations" author="reservation-service">
+        <createIndex indexName="idx_reservations_customer" tableName="reservations">
+            <column name="customer_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_reservations_restaurant" tableName="reservations">
+            <column name="restaurant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_reservations_table" tableName="reservations">
+            <column name="table_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_reservations_date" tableName="reservations">
+            <column name="reservation_date"/>
+        </createIndex>
+
+        <createIndex indexName="idx_reservations_status" tableName="reservations">
+            <column name="status"/>
+        </createIndex>
     </changeSet>
 
 </databaseChangeLog>

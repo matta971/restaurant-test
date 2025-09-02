@@ -6,12 +6,24 @@ WORKDIR /app
 
 # Copy parent pom and common module first (for better caching)
 COPY pom.xml ./
+
+# Copy ALL module poms (nécessaire pour la résolution des dépendances)
 COPY common/pom.xml ./common/
+COPY restaurant-service/pom.xml ./restaurant-service/
+COPY reservation-service/pom.xml ./reservation-service/
+COPY api-gateway/pom.xml ./api-gateway/
+
+# Copy common module source (requis comme dépendance)
 COPY common/src ./common/src
 
-# Copy api-gateway
-COPY api-gateway/pom.xml ./api-gateway/
+# Copy api-gateway module source
 COPY api-gateway/src ./api-gateway/src
+
+# Create empty src directories for other modules (to satisfy Maven structure)
+RUN mkdir -p ./reservation-service/src/main/java && \
+    mkdir -p ./reservation-service/src/main/resources && \
+    mkdir -p ./api-gateway/src/main/java && \
+    mkdir -p ./api-gateway/src/main/resources
 
 # Build the application
 RUN mvn clean package -pl api-gateway -am -DskipTests
