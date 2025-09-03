@@ -44,6 +44,36 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
             maxAge: 3600
+      routes:
+        # Route pour la documentation Swagger du Restaurant Service
+        - id: restaurant-docs
+          uri: http://localhost:8081
+          predicates:
+            - Path=/restaurant/v3/api-docs
+          filters:
+            - RewritePath=/restaurant/v3/api-docs, /v3/api-docs
+
+        # Route pour la documentation Swagger du Reservation Service
+        - id: reservation-docs
+          uri: http://localhost:8082
+          predicates:
+            - Path=/reservation/v3/api-docs
+          filters:
+            - RewritePath=/reservation/v3/api-docs, /v3/api-docs
+
+        - id: restaurant-docs-docker
+          uri: http://restaurant-service-1:8081
+          predicates:
+            - Path=/restaurant/v3/api-docs
+          filters:
+            - RewritePath=/restaurant/v3/api-docs, /v3/api-docs
+
+            - id: reservation-docs-docker
+              uri: http://reservation-service-1:8082
+              predicates:
+                - Path=/reservation/v3/api-docs
+              filters:
+                - RewritePath=/reservation/v3/api-docs, /v3/api-docs
 
 # JWT Configuration
 jwt:
@@ -99,14 +129,18 @@ logging:
 springdoc:
   api-docs:
     enabled: true
+    path: /v3/api-docs
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
     urls:
-      - name: Restaurant Service
-        url: http://localhost:8081/api-docs
-      - name: Reservation Service
-        url: http://localhost:8082/api-docs
+      - name: "API Gateway"
+        url: /v3/api-docs
+      - name: "Restaurant Service"
+        url: /restaurant/v3/api-docs
+      - name: "Reservation Service"
+        url: /reservation/v3/api-docs
 
 ---
 # Docker Profile
@@ -129,10 +163,12 @@ services:
 springdoc:
   swagger-ui:
     urls:
-      - name: Restaurant Service
-        url: http://restaurant-service:8081/api-docs
-      - name: Reservation Service
-        url: http://reservation-service:8082/api-docs
+      - name: "API Gateway"
+        url: /v3/api-docs
+      - name: "Restaurant Service"
+        url: /restaurant/v3/api-docs
+      - name: "Reservation Service"
+        url: /reservation/v3/api-docs
 
 logging:
   level:

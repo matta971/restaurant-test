@@ -1,0 +1,1433 @@
+openapi: 3.0.3
+info:
+  title: Restaurant Reservation System API
+  description: |
+    Système complet de réservation de restaurants basé sur une architecture microservices.
+    
+    ## Architecture
+    - **API Gateway** : Point d'entrée unique avec authentification JWT
+    - **Restaurant Service** : Gestion des restaurants, tables et disponibilités
+    - **Reservation Service** : Gestion complète des réservations
+    - **Load Balancer** : Nginx pour la haute disponibilité
+    
+    ## Authentification
+    Utilisez l'endpoint `/auth/login` pour obtenir un token JWT, puis incluez-le dans le header Authorization :
+    ```
+    Authorization: Bearer <votre-jwt-token>
+    ```
+    
+    ## Identifiants de test
+    - **Admin** : `admin` / `admin123` (accès complet)
+    - **Customer** : `customer` / `customer123` (réservations)
+    - **Restaurant** : `restaurant` / `restaurant123` (gestion restaurant)
+    
+    ## Workflow recommandé
+    1. S'authentifier (`POST /auth/login`)
+    2. Créer un restaurant (`POST /api/restaurants`)
+    3. Ajouter des tables (`POST /api/restaurants/{id}/tables`)
+    4. Créer une réservation (`POST /api/reservations`)
+    5. Confirmer la réservation (`PATCH /api/reservations/{id}/confirm`)
+  version: 1.0.0
+  contact:
+    name: Restaurant System Team
+    email: contact@restaurant-system.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:8080
+    description: API Gateway (Développement)
+  - url: http://localhost
+    description: Load Balancer (Production)
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ================================
+  # AUTHENTIFICATION
+  # ================================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Connexion et génération du token JWT
+      description: Authentifie l'utilisateur et retourne un token JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+            examples:
+              admin:
+                summary: Connexion Admin
+                value:
+                  username: admin
+                  password: admin123
+              customer:
+                summary: Connexion Customer
+                value:
+                  username: customer
+                  password: customer123
+              restaurant:
+                summary: Connexion Restaurant Owner
+                value:
+                  username: restaurant
+                  password: restaurant123
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Connexion réussie
+                  value:
+                    token: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjdXN0b21lciIsInJvbGUiOiJDVVNUT01FUiIsImlhdCI6MTcwNDk5NjAwMCwiZXhwIjoxNzA1MDgyNDAwfQ.signature"
+                    message: "Login successful"
+                    username: "customer"
+                    role: "CUSTOMER"
+                    expiresAt: "2024-01-02T10:00:00"
+                    tokenType: "Bearer"
+                    permissions: ["read", "create_reservation"]
+        '400':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                error:
+                  summary: Identifiants invalides
+                  value:
+                    message: "Invalid credentials"
+                    token: null
+
+  # ================================
+  # GESTION DES RESTAURANTS
+  # ================================
+  /api/restaurants:
+    get:
+      tags:
+        - Restaurants
+      summary: Liste des restaurants
+      description: Récupère tous les restaurants avec pagination
+      security: []
+      parameters:
+        - name: page
+          in: query
+          description: Numéro de page (commence à 0)
+          schema:
+            type: integer
+            default: 0
+            example: 0
+        - name: size
+          in: query
+          description: Taille de la page
+          schema:
+            type: integer
+            default: 20
+            example: 10
+        - name: sort
+          in: query
+          description: Tri (ex. name,asc ou cuisine,desc)
+          schema:
+            type: string
+            example: "name,asc"
+        - name: search
+          in: query
+          description: Recherche par nom ou cuisine
+          schema:
+            type: string
+            example: "italien"
+      responses:
+        '200':
+          description: Liste des restaurants
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/RestaurantPageResponse'
+              examples:
+                success:
+                  summary: Liste de restaurants
+                  value:
+                    _embedded:
+                      restaurants:
+                        - id: 1
+                          name: "La Bella Vita"
+                          description: "Authentique cuisine italienne"
+                          cuisine: "ITALIAN"
+                          address:
+                            street: "123 rue de la Paix"
+                            city: "Paris"
+                            postalCode: "75001"
+                            country: "France"
+                          contactInfo:
+                            phone: "+33142123456"
+                            email: "contact@labellavita.fr"
+                            website: "https://labellavita.fr"
+                          openingHours:
+                            - dayOfWeek: "MONDAY"
+                              openTime: "11:30"
+                              closeTime: "14:30"
+                            - dayOfWeek: "MONDAY"
+                              openTime: "19:00"
+                              closeTime: "23:00"
+                          priceRange: "MEDIUM"
+                          rating: 4.5
+                          totalTables: 12
+                          availableTables: 8
+                          _links:
+                            self:
+                              href: "/api/restaurants/1"
+                            tables:
+                              href: "/api/restaurants/1/tables"
+                            availability:
+                              href: "/api/restaurants/1/availability"
+                    page:
+                      size: 10
+                      totalElements: 25
+                      totalPages: 3
+                      number: 0
+
+    post:
+      tags:
+        - Restaurants
+      summary: Créer un restaurant
+      description: Crée un nouveau restaurant (admin/restaurant owner uniquement)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRestaurantRequest'
+            examples:
+              italian_restaurant:
+                summary: Restaurant italien
+                value:
+                  name: "La Bella Vita"
+                  description: "Authentique cuisine italienne dans un cadre chaleureux"
+                  cuisine: "ITALIAN"
+                  address:
+                    street: "123 rue de la Paix"
+                    city: "Paris"
+                    postalCode: "75001"
+                    country: "France"
+                  contactInfo:
+                    phone: "+33142123456"
+                    email: "contact@labellavita.fr"
+                    website: "https://labellavita.fr"
+                  openingHours:
+                    - dayOfWeek: "MONDAY"
+                      openTime: "11:30"
+                      closeTime: "14:30"
+                    - dayOfWeek: "MONDAY"
+                      openTime: "19:00"
+                      closeTime: "23:00"
+                    - dayOfWeek: "TUESDAY"
+                      openTime: "11:30"
+                      closeTime: "14:30"
+                    - dayOfWeek: "TUESDAY"
+                      openTime: "19:00"
+                      closeTime: "23:00"
+                  priceRange: "MEDIUM"
+              french_restaurant:
+                summary: Restaurant français
+                value:
+                  name: "Le Petit Bistro"
+                  description: "Cuisine française traditionnelle"
+                  cuisine: "FRENCH"
+                  address:
+                    street: "456 boulevard Saint-Germain"
+                    city: "Paris"
+                    postalCode: "75006"
+                    country: "France"
+                  contactInfo:
+                    phone: "+33145234567"
+                    email: "contact@lepetitbistro.fr"
+                  openingHours:
+                    - dayOfWeek: "TUESDAY"
+                      openTime: "12:00"
+                      closeTime: "15:00"
+                    - dayOfWeek: "TUESDAY"
+                      openTime: "19:30"
+                      closeTime: "23:30"
+                  priceRange: "HIGH"
+      responses:
+        '201':
+          description: Restaurant créé avec succès
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+        '400':
+          description: Données invalides
+        '401':
+          description: Non autorisé
+
+  /api/restaurants/{id}:
+    get:
+      tags:
+        - Restaurants
+      summary: Détails d'un restaurant
+      description: Récupère les détails complets d'un restaurant
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du restaurant
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Détails du restaurant
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+        '404':
+          description: Restaurant non trouvé
+
+    put:
+      tags:
+        - Restaurants
+      summary: Mettre à jour un restaurant
+      description: Met à jour les informations d'un restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du restaurant
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRestaurantRequest'
+      responses:
+        '200':
+          description: Restaurant mis à jour
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/RestaurantResponse'
+        '404':
+          description: Restaurant non trouvé
+
+  # ================================
+  # GESTION DES TABLES
+  # ================================
+  /api/restaurants/{restaurantId}/tables:
+    get:
+      tags:
+        - Tables
+      summary: Tables d'un restaurant
+      description: Liste toutes les tables d'un restaurant
+      security: []
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          description: ID du restaurant
+          schema:
+            type: integer
+            example: 1
+        - name: available
+          in: query
+          description: Filtrer par disponibilité
+          schema:
+            type: boolean
+            example: true
+        - name: location
+          in: query
+          description: Filtrer par emplacement
+          schema:
+            type: string
+            enum: [TERRACE, MAIN_ROOM, PRIVATE_ROOM, BAR]
+            example: "MAIN_ROOM"
+      responses:
+        '200':
+          description: Liste des tables
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/TableListResponse'
+              examples:
+                tables_list:
+                  summary: Liste des tables
+                  value:
+                    _embedded:
+                      tables:
+                        - id: 1
+                          tableNumber: "T-001"
+                          seats: 4
+                          location: "MAIN_ROOM"
+                          available: true
+                          restaurantId: 1
+                          _links:
+                            self:
+                              href: "/api/restaurants/1/tables/1"
+                        - id: 2
+                          tableNumber: "T-002"
+                          seats: 2
+                          location: "TERRACE"
+                          available: true
+                          restaurantId: 1
+                          _links:
+                            self:
+                              href: "/api/restaurants/1/tables/2"
+
+    post:
+      tags:
+        - Tables
+      summary: Ajouter une table
+      description: Ajoute une nouvelle table au restaurant
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          description: ID du restaurant
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTableRequest'
+            examples:
+              table_4_persons:
+                summary: Table 4 personnes
+                value:
+                  seats: 4
+                  location: "MAIN_ROOM"
+                  tableNumber: "T-004"
+              table_terrace:
+                summary: Table terrasse 6 personnes
+                value:
+                  seats: 6
+                  location: "TERRACE"
+                  tableNumber: "T-TERRACE-01"
+              table_private:
+                summary: Table privée 8 personnes
+                value:
+                  seats: 8
+                  location: "PRIVATE_ROOM"
+                  tableNumber: "T-PRIVATE-01"
+      responses:
+        '201':
+          description: Table créée avec succès
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/TableResponse'
+
+  /api/restaurants/{restaurantId}/tables/{tableId}:
+    get:
+      tags:
+        - Tables
+      summary: Détails d'une table
+      description: Récupère les détails d'une table spécifique
+      security: []
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Détails de la table
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/TableResponse'
+
+  # ================================
+  # DISPONIBILITÉS
+  # ================================
+  /api/restaurants/{restaurantId}/availability:
+    get:
+      tags:
+        - Availability
+      summary: Vérifier les disponibilités
+      description: Vérifie les créneaux disponibles pour un restaurant
+      security: []
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: date
+          in: query
+          required: true
+          description: Date de réservation
+          schema:
+            type: string
+            format: date
+            example: "2024-12-25"
+        - name: startTime
+          in: query
+          description: Heure de début souhaitée
+          schema:
+            type: string
+            format: time
+            example: "19:00"
+        - name: endTime
+          in: query
+          description: Heure de fin souhaitée
+          schema:
+            type: string
+            format: time
+            example: "21:00"
+        - name: partySize
+          in: query
+          required: true
+          description: Nombre de personnes
+          schema:
+            type: integer
+            example: 4
+      responses:
+        '200':
+          description: Créneaux disponibles
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityResponse'
+              examples:
+                available_slots:
+                  summary: Créneaux disponibles
+                  value:
+                    _embedded:
+                      availableSlots:
+                        - tableId: 1
+                          tableNumber: "T-001"
+                          startTime: "19:00"
+                          endTime: "21:00"
+                          available: true
+                          seats: 4
+                        - tableId: 3
+                          tableNumber: "T-003"
+                          startTime: "19:30"
+                          endTime: "21:30"
+                          available: true
+                          seats: 6
+
+  /api/restaurants/{restaurantId}/availability/best-table:
+    get:
+      tags:
+        - Availability
+      summary: Meilleure table disponible
+      description: Trouve la meilleure table disponible selon les critères
+      security: []
+      parameters:
+        - name: restaurantId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2024-12-25"
+        - name: startTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: time
+            example: "19:00"
+        - name: endTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: time
+            example: "21:00"
+        - name: partySize
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 4
+      responses:
+        '200':
+          description: Meilleure table trouvée
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/TableResponse'
+
+  # ================================
+  # GESTION DES RÉSERVATIONS
+  # ================================
+  /api/reservations:
+    get:
+      tags:
+        - Reservations
+      summary: Liste des réservations
+      description: Récupère les réservations (filtrées selon les droits utilisateur)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+            example: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            example: 10
+        - name: date
+          in: query
+          description: Filtrer par date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-25"
+        - name: status
+          in: query
+          description: Filtrer par statut
+          schema:
+            type: string
+            enum: [PENDING, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW]
+            example: "CONFIRMED"
+        - name: restaurantId
+          in: query
+          description: Filtrer par restaurant
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Liste des réservations
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/ReservationPageResponse'
+
+    post:
+      tags:
+        - Reservations
+      summary: Créer une réservation
+      description: Crée une nouvelle réservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReservationRequest'
+            examples:
+              romantic_dinner:
+                summary: Dîner romantique
+                value:
+                  customerEmail: "marie.dupont@email.com"
+                  customerFirstName: "Marie"
+                  customerLastName: "Dupont"
+                  customerPhoneNumber: "+33612345678"
+                  restaurantId: 1
+                  tableId: 2
+                  reservationDate: "2024-12-25"
+                  startTime: "20:00"
+                  endTime: "22:00"
+                  partySize: 2
+                  specialRequests: "Table près de la fenêtre pour un anniversaire"
+              business_lunch:
+                summary: Déjeuner d'affaires
+                value:
+                  customerEmail: "pierre.martin@company.com"
+                  customerFirstName: "Pierre"
+                  customerLastName: "Martin"
+                  customerPhoneNumber: "+33677889900"
+                  restaurantId: 1
+                  tableId: 5
+                  reservationDate: "2024-12-20"
+                  startTime: "12:30"
+                  endTime: "14:00"
+                  partySize: 4
+                  specialRequests: "Menu végétarien pour une personne"
+              family_dinner:
+                summary: Dîner familial
+                value:
+                  customerEmail: "sophie.bernard@email.fr"
+                  customerFirstName: "Sophie"
+                  customerLastName: "Bernard"
+                  customerPhoneNumber: "+33698765432"
+                  restaurantId: 1
+                  tableId: 8
+                  reservationDate: "2024-12-31"
+                  startTime: "19:30"
+                  endTime: "22:30"
+                  partySize: 6
+                  specialRequests: "Chaise haute pour enfant, allergie aux fruits de mer"
+      responses:
+        '201':
+          description: Réservation créée avec succès
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+        '400':
+          description: Données de réservation invalides
+        '409':
+          description: Créneau non disponible
+
+  /api/reservations/{id}:
+    get:
+      tags:
+        - Reservations
+      summary: Détails d'une réservation
+      description: Récupère les détails d'une réservation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Détails de la réservation
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+              examples:
+                reservation_details:
+                  summary: Détails de réservation
+                  value:
+                    id: 1
+                    customer:
+                      email: "marie.dupont@email.com"
+                      firstName: "Marie"
+                      lastName: "Dupont"
+                      phoneNumber: "+33612345678"
+                    restaurantId: 1
+                    tableId: 2
+                    reservationDate: "2024-12-25"
+                    startTime: "20:00"
+                    endTime: "22:00"
+                    partySize: 2
+                    status: "CONFIRMED"
+                    specialRequests: "Table près de la fenêtre pour un anniversaire"
+                    createdAt: "2024-12-20T10:30:00"
+                    confirmedAt: "2024-12-20T11:00:00"
+                    durationMinutes: 120
+                    canBeModified: true
+                    canBeCancelled: true
+                    estimatedArrival: "2024-12-25T19:45:00"
+                    _links:
+                      self:
+                        href: "/api/reservations/1"
+                      confirm:
+                        href: "/api/reservations/1/confirm"
+                      cancel:
+                        href: "/api/reservations/1/cancel"
+                      restaurant:
+                        href: "/api/restaurants/1"
+
+    put:
+      tags:
+        - Reservations
+      summary: Modifier une réservation
+      description: Modifie une réservation existante
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReservationRequest'
+            examples:
+              change_time:
+                summary: Changer l'heure
+                value:
+                  reservationDate: "2024-12-25"
+                  startTime: "19:30"
+                  endTime: "21:30"
+                  partySize: 2
+                  specialRequests: "Table près de la fenêtre pour un anniversaire, arrivée possible en retard"
+      responses:
+        '200':
+          description: Réservation modifiée
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+
+  /api/reservations/{id}/confirm:
+    patch:
+      tags:
+        - Reservations
+      summary: Confirmer une réservation
+      description: Confirme une réservation en attente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Réservation confirmée
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+
+  /api/reservations/{id}/cancel:
+    patch:
+      tags:
+        - Reservations
+      summary: Annuler une réservation
+      description: Annule une réservation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: reason
+          in: query
+          description: Raison de l'annulation
+          schema:
+            type: string
+            example: "Changement de programme"
+      responses:
+        '200':
+          description: Réservation annulée
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+
+  /api/reservations/{id}/complete:
+    patch:
+      tags:
+        - Reservations
+      summary: Marquer comme terminée
+      description: Marque une réservation comme terminée
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Réservation terminée
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+
+  # ================================
+  # HEALTH CHECK
+  # ================================
+  /actuator/health:
+    get:
+      tags:
+        - System
+      summary: Vérification de santé
+      description: Vérifie l'état de santé des services
+      security: []
+      responses:
+        '200':
+          description: Services opérationnels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "UP"
+                  components:
+                    type: object
+                    example:
+                      db:
+                        status: "UP"
+                      restaurantService:
+                        status: "UP"
+
+# ================================
+# COMPOSANTS RÉUTILISABLES
+# ================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenu via /auth/login
+
+  schemas:
+    # Authentication
+    AuthRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "customer"
+        password:
+          type: string
+          example: "customer123"
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzUxMiJ9..."
+        message:
+          type: string
+          example: "Login successful"
+        username:
+          type: string
+          example: "customer"
+        role:
+          type: string
+          example: "CUSTOMER"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2024-01-02T10:00:00"
+        tokenType:
+          type: string
+          example: "Bearer"
+        permissions:
+          type: array
+          items:
+            type: string
+          example: ["read", "create_reservation"]
+
+    # Restaurant
+    Address:
+      type: object
+      required:
+        - street
+        - city
+        - postalCode
+        - country
+      properties:
+        street:
+          type: string
+          example: "123 rue de la Paix"
+        city:
+          type: string
+          example: "Paris"
+        postalCode:
+          type: string
+          example: "75001"
+        country:
+          type: string
+          example: "France"
+
+    ContactInfo:
+      type: object
+      required:
+        - phone
+        - email
+      properties:
+        phone:
+          type: string
+          example: "+33142123456"
+        email:
+          type: string
+          format: email
+          example: "contact@restaurant.fr"
+        website:
+          type: string
+          format: uri
+          example: "https://restaurant.fr"
+
+    OpeningHours:
+      type: object
+      required:
+        - dayOfWeek
+        - openTime
+        - closeTime
+      properties:
+        dayOfWeek:
+          type: string
+          enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+          example: "MONDAY"
+        openTime:
+          type: string
+          format: time
+          example: "11:30"
+        closeTime:
+          type: string
+          format: time
+          example: "23:00"
+
+    CreateRestaurantRequest:
+      type: object
+      required:
+        - name
+        - description
+        - cuisine
+        - address
+        - contactInfo
+        - openingHours
+        - priceRange
+      properties:
+        name:
+          type: string
+          example: "La Bella Vita"
+        description:
+          type: string
+          example: "Authentique cuisine italienne"
+        cuisine:
+          type: string
+          enum: [FRENCH, ITALIAN, ASIAN, MEXICAN, AMERICAN, MEDITERRANEAN, OTHER]
+          example: "ITALIAN"
+        address:
+          $ref: '#/components/schemas/Address'
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfo'
+        openingHours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningHours'
+        priceRange:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+          example: "MEDIUM"
+
+    UpdateRestaurantRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateRestaurantRequest'
+
+    RestaurantResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "La Bella Vita"
+        description:
+          type: string
+          example: "Authentique cuisine italienne"
+        cuisine:
+          type: string
+          example: "ITALIAN"
+        address:
+          $ref: '#/components/schemas/Address'
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfo'
+        openingHours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningHours'
+        priceRange:
+          type: string
+          example: "MEDIUM"
+        rating:
+          type: number
+          format: double
+          example: 4.5
+        totalTables:
+          type: integer
+          example: 12
+        availableTables:
+          type: integer
+          example: 8
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: "/api/restaurants/1"
+
+    RestaurantPageResponse:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            restaurants:
+              type: array
+              items:
+                $ref: '#/components/schemas/RestaurantResponse'
+        page:
+          type: object
+          properties:
+            size:
+              type: integer
+              example: 10
+            totalElements:
+              type: integer
+              example: 25
+            totalPages:
+              type: integer
+              example: 3
+            number:
+              type: integer
+              example: 0
+
+    # Tables
+    CreateTableRequest:
+      type: object
+      required:
+        - seats
+        - location
+      properties:
+        seats:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 4
+        location:
+          type: string
+          enum: [TERRACE, MAIN_ROOM, PRIVATE_ROOM, BAR]
+          example: "MAIN_ROOM"
+        tableNumber:
+          type: string
+          example: "T-004"
+
+    TableResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        tableNumber:
+          type: string
+          example: "T-001"
+        seats:
+          type: integer
+          example: 4
+        location:
+          type: string
+          enum: [TERRACE, MAIN_ROOM, PRIVATE_ROOM, BAR]
+          example: "MAIN_ROOM"
+        available:
+          type: boolean
+          example: true
+        restaurantId:
+          type: integer
+          example: 1
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: "/api/restaurants/1/tables/1"
+
+    TableListResponse:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            tables:
+              type: array
+              items:
+                $ref: '#/components/schemas/TableResponse'
+
+    # Availability
+    AvailabilityResponse:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            availableSlots:
+              type: array
+              items:
+                type: object
+                properties:
+                  tableId:
+                    type: integer
+                    example: 1
+                  tableNumber:
+                    type: string
+                    example: "T-001"
+                  startTime:
+                    type: string
+                    format: time
+                    example: "19:00"
+                  endTime:
+                    type: string
+                    format: time
+                    example: "21:00"
+                  available:
+                    type: boolean
+                    example: true
+                  seats:
+                    type: integer
+                    example: 4
+
+    # Reservations
+    CustomerInfo:
+      type: object
+      required:
+        - email
+        - firstName
+        - lastName
+        - phoneNumber
+      properties:
+        email:
+          type: string
+          format: email
+          example: "marie.dupont@email.com"
+        firstName:
+          type: string
+          example: "Marie"
+        lastName:
+          type: string
+          example: "Dupont"
+        phoneNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          example: "+33612345678"
+
+    CreateReservationRequest:
+      type: object
+      required:
+        - customerEmail
+        - customerFirstName
+        - customerLastName
+        - customerPhoneNumber
+        - restaurantId
+        - tableId
+        - reservationDate
+        - startTime
+        - endTime
+        - partySize
+      properties:
+        customerEmail:
+          type: string
+          format: email
+          example: "marie.dupont@email.com"
+        customerFirstName:
+          type: string
+          example: "Marie"
+        customerLastName:
+          type: string
+          example: "Dupont"
+        customerPhoneNumber:
+          type: string
+          example: "+33612345678"
+        restaurantId:
+          type: integer
+          example: 1
+        tableId:
+          type: integer
+          example: 2
+        reservationDate:
+          type: string
+          format: date
+          example: "2024-12-25"
+        startTime:
+          type: string
+          format: time
+          example: "20:00"
+        endTime:
+          type: string
+          format: time
+          example: "22:00"
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 2
+        specialRequests:
+          type: string
+          example: "Table près de la fenêtre pour un anniversaire"
+
+    UpdateReservationRequest:
+      type: object
+      properties:
+        reservationDate:
+          type: string
+          format: date
+          example: "2024-12-25"
+        startTime:
+          type: string
+          format: time
+          example: "19:30"
+        endTime:
+          type: string
+          format: time
+          example: "21:30"
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 2
+        specialRequests:
+          type: string
+          example: "Table près de la fenêtre, arrivée possible en retard"
+
+    ReservationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        customer:
+          type: object
+          properties:
+            email:
+              type: string
+              example: "marie.dupont@email.com"
+            firstName:
+              type: string
+              example: "Marie"
+            lastName:
+              type: string
+              example: "Dupont"
+            phoneNumber:
+              type: string
+              example: "+33612345678"
+        restaurantId:
+          type: integer
+          example: 1
+        tableId:
+          type: integer
+          example: 2
+        reservationDate:
+          type: string
+          format: date
+          example: "2024-12-25"
+        startTime:
+          type: string
+          format: time
+          example: "20:00"
+        endTime:
+          type: string
+          format: time
+          example: "22:00"
+        partySize:
+          type: integer
+          example: 2
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW]
+          example: "CONFIRMED"
+        specialRequests:
+          type: string
+          example: "Table près de la fenêtre pour un anniversaire"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-12-20T10:30:00"
+        confirmedAt:
+          type: string
+          format: date-time
+          example: "2024-12-20T11:00:00"
+        cancelledAt:
+          type: string
+          format: date-time
+        cancellationReason:
+          type: string
+        durationMinutes:
+          type: integer
+          example: 120
+        canBeModified:
+          type: boolean
+          example: true
+        canBeCancelled:
+          type: boolean
+          example: true
+        estimatedArrival:
+          type: string
+          format: date-time
+          example: "2024-12-25T19:45:00"
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: "/api/reservations/1"
+
+    ReservationPageResponse:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            reservations:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReservationResponse'
+        page:
+          type: object
+          properties:
+            size:
+              type: integer
+              example: 10
+            totalElements:
+              type: integer
+              example: 50
+            totalPages:
+              type: integer
+              example: 5
+            number:
+              type: integer
+              example: 0
+
+tags:
+  - name: Authentication
+    description: Authentification JWT
+  - name: Restaurants
+    description: Gestion des restaurants
+  - name: Tables
+    description: Gestion des tables
+  - name: Availability
+    description: Vérification des disponibilités
+  - name: Reservations
+    description: Gestion des réservations
+  - name: System
+    description: Surveillance du système

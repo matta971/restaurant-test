@@ -131,6 +131,7 @@ curl http://localhost:8080/actuator/health  # API Gateway
 ## Documentation API
 
 ### Accéder à Swagger UI
+[![📚 Documentation API](https://img.shields.io/badge/📚_Documentation_API-Swagger_Editor-85EA2D?style=for-the-badge&logo=swagger&logoColor=white)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/matta971/restaurant-test/tree/main/openapi.yml)
 - **API Gateway** : http://localhost:8080/swagger-ui.html
 - **Restaurant Service** : http://localhost:8081/swagger-ui.html
 - **Reservation Service** : http://localhost:8082/swagger-ui.html
@@ -322,7 +323,7 @@ docker-compose logs -f api-gateway
 docker-compose logs -f load-balancer
 ```
 
-## 🚀 Déploiement
+## Déploiement
 
 ### Développement Local
 ```bash
@@ -382,7 +383,7 @@ curl http://localhost/nginx_status
 - Conteneurs Docker exécutés en tant qu'utilisateur non-root
 - Segmentation réseau avec réseaux Docker
 
-## 📄 Décisions Techniques & Justifications
+## Décisions Techniques & Justifications
 
 ### Pourquoi Spring Cloud Gateway plutôt que Zuul ?
 - **Stack réactive** : Construit sur Spring WebFlux pour de meilleures performances
