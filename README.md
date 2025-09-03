@@ -131,11 +131,7 @@ curl http://localhost:8080/actuator/health  # API Gateway
 ## Documentation API
 
 ### Accéder à Swagger UI
-[![📚 Documentation API](https://img.shields.io/badge/📚_Documentation_API-Swagger_Editor-85EA2D?style=for-the-badge&logo=swagger&logoColor=white)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/matta971/restaurant-test/tree/main/openapi.yml)
-- **API Gateway** : http://localhost:8080/swagger-ui.html
-- **Restaurant Service** : http://localhost:8081/swagger-ui.html
-- **Reservation Service** : http://localhost:8082/swagger-ui.html
-- **Production (Load Balanced)** : http://localhost/swagger-ui.html
+[![Documentation de l'API Complète](https://img.shields.io/badge/📚_Documentation_API-Swagger_Editor-85EA2D?style=for-the-badge&logo=swagger&logoColor=white)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/matta971/restaurant-test/tree/main/openapi.yml)
 
 ### Authentification
 
