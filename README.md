@@ -180,6 +180,18 @@ mvn verify -P integration-tests
 mvn test -Dtest=*IntegrationTest
 ```
 
+### Tests de Charge
+```bash
+# Utiliser Apache Bench
+ab -n 1000 -c 10 http://localhost/api/restaurants
+
+# Utiliser curl en boucle
+for i in {1..100}; do
+  curl -s http://localhost/api/restaurants > /dev/null
+  echo "Request $i completed"
+done
+```
+
 
 ### Principes d'Architecture
 
